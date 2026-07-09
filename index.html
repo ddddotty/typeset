@@ -387,6 +387,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
+  ASSET_V = 'v3';
   TOC_ICONS = {
     duotone: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="22" y="28" width="26" height="44" fill="#5e5b54"/><rect x="52" y="28" width="26" height="44" fill="#e9e7e1"/></svg>',
     diagonal: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g stroke="#e9e7e1" stroke-width="2" stroke-linecap="round"><line x1="14" y1="68" x2="68" y2="14"/><line x1="22" y1="78" x2="78" y2="22"/><line x1="32" y1="86" x2="86" y2="32"/></g><g stroke="#5e5b54" stroke-width="1.6" stroke-linecap="round"><line x1="18" y1="76" x2="56" y2="38"/><line x1="44" y1="86" x2="82" y2="48"/></g></svg>',
@@ -568,12 +569,12 @@ class Component extends DCLogic {
       const ch = t.num + ' ' + t.name;
       // 扉頁左頁：介紹「即將進入」的這個新主題
       leaves.push({ type: 'intro', num: t.num, name: t.name, text: intro[t.num] || '', chapter: ch, chapterEn: t.en, kind: '單元介紹 Intro' });
-      leaves.push({ type: 'theme', themeCover: true, src: 'ebook/' + t.num + '-0.jpg', chapter: ch, chapterEn: t.en, kind: '單元扉頁 Chapter', num: t.num, name: t.name, en: t.en, photoTech: t.photoTech });
-      leaves.push({ type: 'img', src: 'ebook/' + t.num + '-1.jpg', chapter: ch, chapterEn: t.en, kind: '技法說明 Technique' });
-      for (let c = 2; c <= 6; c++) leaves.push({ type: 'img', src: 'ebook/' + t.num + '-' + c + '.jpg', chapter: ch, chapterEn: t.en, kind: '實際案例 Case ' + (c - 1) });
+      leaves.push({ type: 'theme', themeCover: true, src: 'ebook/' + t.num + '-0.jpg?v=' + this.ASSET_V, chapter: ch, chapterEn: t.en, kind: '單元扉頁 Chapter', num: t.num, name: t.name, en: t.en, photoTech: t.photoTech });
+      leaves.push({ type: 'img', src: 'ebook/' + t.num + '-1.jpg?v=' + this.ASSET_V, chapter: ch, chapterEn: t.en, kind: '技法說明 Technique' });
+      for (let c = 2; c <= 6; c++) leaves.push({ type: 'img', src: 'ebook/' + t.num + '-' + c + '.jpg?v=' + this.ASSET_V, chapter: ch, chapterEn: t.en, kind: '實際案例 Case ' + (c - 1) });
     });
-    leaves.push({ type: 'img', src: 'ebook/end-disclaimer.jpg', chapter: '免責聲明', chapterEn: 'Disclaimer', kind: '免責聲明 Disclaimer' });
-    leaves.push({ type: 'img', src: 'ebook/end-cta.jpg', chapter: '關於', chapterEn: 'About', kind: '追蹤 @dddotty' });
+    leaves.push({ type: 'img', src: 'ebook/end-disclaimer.jpg?v=' + this.ASSET_V, chapter: '免責聲明', chapterEn: 'Disclaimer', kind: '免責聲明 Disclaimer' });
+    leaves.push({ type: 'img', src: 'ebook/end-cta.jpg?v=' + this.ASSET_V, chapter: '關於', chapterEn: 'About', kind: '追蹤 @dddotty' });
     leaves.push({ type: 'backcover', chapter: '封底', chapterEn: 'Colophon', kind: '封底 Colophon' });
     this._leavesCache = leaves;
     return leaves;
@@ -813,7 +814,7 @@ class Component extends DCLogic {
         bareName: t.name,
         en: t.en,
         photoTech: t.photoTech,
-        coverImg: React.createElement('img', { src: 'ebook/' + t.num + '-0.jpg', alt: t.name, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
+        coverImg: React.createElement('img', { src: 'ebook/' + t.num + '-0.jpg?v=' + this.ASSET_V, alt: t.name, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
         go: () => this.bookGo(3 + t.idx * 8, 1),
       })),
     };
