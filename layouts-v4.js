@@ -91,7 +91,7 @@ function c1e(W, H) { // 邊欄色塊（KIRIN 生茶）
 function c2a(W, H) { // 斜紋律動（NemoWV1）
   const { m, TS, SS, DS, ES } = K(W, H, 1.22);
   return [
-    sh('stripes', { cx: W * 0.55, cy: H * 0.55, angle: -38, count: 9, bandW: K(W, H).S * 0.052, gap: K(W, H).S * 0.13, len: Math.hypot(W, H) * 1.4, fill: 'gray', opacity: 0.4 }),
+    sh('stripes', { cx: W * 0.5, cy: H * 0.5, angle: -38, count: 15, bandW: K(W, H).S * 0.062, gap: K(W, H).S * 0.11, len: Math.hypot(W, H) * 1.6, fill: 'gray', opacity: 0.5 }),
     img(W * 0.52, H * 0.42, W * 0.38, H * 0.36),
     tt(m, m * 0.9, W * 0.86, TS * 3.5, TS, 'fg', { lh: 1.06 }),
     sub(m, H * 0.38, W * 0.4, SS * 4.7, SS, 'fg'),
@@ -102,7 +102,7 @@ function c2a(W, H) { // 斜紋律動（NemoWV1）
 function c2b(W, H) { // 粗斜紋滿版（太郎サブレ）
   const { S, m, TS, SS, DS, ES } = K(W, H);
   return [
-    sh('stripes', { cx: W / 2, cy: H / 2, angle: -45, count: 6, bandW: S * 0.13, gap: S * 0.13, len: Math.hypot(W, H) * 1.4, fill: 'fg' }),
+    sh('stripes', { cx: W / 2, cy: H / 2, angle: -45, count: 10, bandW: S * 0.13, gap: S * 0.13, len: Math.hypot(W, H) * 1.6, fill: 'fg' }),
     eb(m, m * 0.7, W - 2 * m, ES, 'fg', { align: 'center', boxFill: 'bg' }),
     img(W * 0.28, H * 0.24, W * 0.44, H * 0.46),
     tt(m, H * 0.745, W - 2 * m, TS * 2.3, TS, 'fg', { align: 'center', boxFill: 'bg', lh: 1.3 }),
@@ -112,7 +112,7 @@ function c2b(W, H) { // 粗斜紋滿版（太郎サブレ）
 function c2c(W, H) { // 標題堆疊（MIDTOWN LOVES SUMMER）
   const { S, m, TS, SS, DS, ES } = K(W, H, 1.4);
   return [
-    sh('stripes', { cx: W / 2, cy: H * 0.32, angle: -45, count: 12, bandW: S * 0.075, gap: S * 0.075, len: Math.hypot(W, H) * 1.4, fill: 'gray', opacity: 0.45 }),
+    sh('stripes', { cx: W / 2, cy: H * 0.32, angle: -45, count: 18, bandW: S * 0.075, gap: S * 0.075, len: Math.hypot(W, H) * 1.6, fill: 'gray', opacity: 0.5 }),
     sh('rect', { x: 0, y: H * 0.66, w: W, h: H * 0.34, fill: 'bg' }),
     tt(m, m * 0.8, W * 0.86, TS * 4.4, TS, 'fg', { lh: 1.18 }),
     txt('d', m, H * 0.53, W * 0.8, DS * 2.2, DS * 1.5, 'fg', { weight: 700, ls: 1, boxFill: 'bg' }),
@@ -125,7 +125,7 @@ function c2c(W, H) { // 標題堆疊（MIDTOWN LOVES SUMMER）
 function c2d(W, H) { // 寬斜帶（LEMONADE STAND）
   const { S, m, TS, SS, DS, ES } = K(W, H);
   return [
-    sh('stripes', { cx: W / 2, cy: H / 2, angle: -28, count: 3, bandW: S * 0.24, gap: S * 0.2, len: Math.hypot(W, H) * 1.4, fill: 'gray', opacity: 0.45 }),
+    sh('stripes', { cx: W / 2, cy: H / 2, angle: -28, count: 6, bandW: S * 0.24, gap: S * 0.2, len: Math.hypot(W, H) * 1.6, fill: 'gray', opacity: 0.45 }),
     img(W * 0.08, H * 0.1, W * 0.38, H * 0.28),
     img(W * 0.55, H * 0.6, W * 0.38, H * 0.28),
     eb(m, H * 0.36, W - 2 * m, ES, 'fg', { align: 'center', boxFill: 'bg' }),
@@ -137,7 +137,7 @@ function c2d(W, H) { // 寬斜帶（LEMONADE STAND）
 function c2e(W, H) { // 細紋框景（JAPAN MOTIF GRAPHICS）
   const { S, m, TS, SS, DS, ES } = K(W, H, 0.92);
   return [
-    sh('stripes', { cx: W / 2, cy: H / 2, angle: -45, count: 18, bandW: S * 0.03, gap: S * 0.05, len: Math.hypot(W, H) * 1.4, fill: 'gray', opacity: 0.5 }),
+    sh('stripes', { cx: W / 2, cy: H / 2, angle: -45, count: 34, bandW: S * 0.03, gap: S * 0.05, len: Math.hypot(W, H) * 1.6, fill: 'gray', opacity: 0.5 }),
     sh('rect', { x: W * 0.12, y: H * 0.09, w: W * 0.76, h: H * 0.82, fill: 'bg', stroke: 'fg', strokeW: S * 0.003 }),
     img(W * 0.17, H * 0.14, W * 0.66, H * 0.42),
     eb(W * 0.17, H * 0.595, W * 0.66, ES, 'fg', { align: 'center' }),
@@ -494,7 +494,7 @@ function c7e(W, H) { // 落地拱門
   return [
     eb(m, m * 0.8, W * 0.6, ES, 'fg'),
     tt(m, H * 0.1, W * 0.86, TS * 2.3, TS, 'fg'),
-    txt('d', W - m * 0.45, H * 0.1, H * 0.5, DS, 'fg', { weight: 700, ls: 1, rotate: 90 }),
+    txt('d', W - m * 0.45, H * 0.1, H * 0.5, DS * 1.6, DS, 'fg', { weight: 700, ls: 1, rotate: 90 }),
     sh('arch', { x: ax - S * 0.018, y: ay - S * 0.018, w: aw + S * 0.036, h: H - ay + S * 0.018, fill: 'none', stroke: 'fg', strokeW: S * 0.003 }),
     img(ax, ay, aw, H - ay, 'arch'),
     sub(m, H * 0.45, W * 0.2, SS * 7, SS, 'fg', { lh: 1.6 }),
@@ -1009,7 +1009,7 @@ function c18c(W, H) { // C 直排寬距 + 照片（model: あんパン / Slidest
     tt(W * 0.06, H * 0.16, W * 0.5, tsz, tsz, 'fg', { diagonal: true, diagWords: true, diagDx: W * 0.04, diagDy: H * 0.052, diagSegX: W * 0.15 }),
     // 右上資訊
     eb(W * 0.6, H * 0.06, W * 0.36, ES, 'fg', { ls: 4, align: 'right' }),
-    sub(W * 0.6, H * 0.1, W * 0.36, SS * 1.4, SS, 'gray', { align: 'right' }),
+    sub(W * 0.6, H * 0.1, W * 0.36, SS * 3, SS, 'gray', { align: 'right', lh: 1.4 }),
     // 右下日期
     txt('d', W * 0.56, H * 0.86, W * 0.4, DS, DS, 'fg', { weight: 700, ls: 2, align: 'right' }),
     txt('i', W * 0.56, H * 0.92, W * 0.4, ES * 1.4, ES, 'gray', { ls: 2, align: 'right' }),
@@ -1196,7 +1196,7 @@ function c17a(W, H) { // A 多氣泡（model: 花緑 seasoning，多種造型環
     eb(W * 0.63, H * 0.1, W * 0.26, ES, 'bg', { align: 'center' }),
     // 左中橢圓
     sh('bubble', { x: m, y: H * 0.34, w: W * 0.24, h: H * 0.13, variant: 'oval', fill: 'none', stroke: 'fg', strokeW: sw, tail: 'br' }),
-    sub(m + W * 0.02, H * 0.37, W * 0.2, SS * 2, SS, 'fg', { align: 'center' }),
+    sub(m + W * 0.02, H * 0.365, W * 0.2, SS * 3.2, SS, 'fg', { align: 'center', lh: 1.35 }),
     // 右中爆炸框
     sh('bubble', { x: W * 0.72, y: H * 0.32, w: W * 0.22, h: H * 0.16, variant: 'burst', fill: 'fg' }),
     txt('s', W * 0.74, H * 0.37, W * 0.18, SS * 2, SS, 'bg', { align: 'center' }),
@@ -1455,7 +1455,7 @@ function c20e(W, H) { // E 滿版淡照（model: Suntory Design Dialogue）
     // 上方左右標題（留白區疊字）
     tt(m, H * 0.1, W * 0.42, TS * 3.4, TS * 0.72, '#ffffff', { lh: 1.1 }),
     eb(W * 0.56, H * 0.12, W * 0.4, ES, '#ffffff', { ls: 1, align: 'right' }),
-    sub(W * 0.56, H * 0.16, W * 0.4, SS * 1.4, SS, '#ffffff', { align: 'right' }),
+    sub(W * 0.56, H * 0.16, W * 0.4, SS * 3, SS, '#ffffff', { align: 'right', lh: 1.4 }),
     // 中段日期 + 場地（壓在留白處）
     txt('d', W * 0.5, H * 0.44, W * 0.44, DS * 1.3, DS, '#ffffff', { weight: 700, ls: 1 }),
     txt('i', W * 0.5, H * 0.5, W * 0.44, ES * 2.4, ES, '#ffffff', { lh: 1.5 }),
