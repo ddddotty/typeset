@@ -266,7 +266,7 @@ export function buildSVG(doc) {
     defs.push('<filter id="gs"><feColorMatrix type="saturate" values="0"/></filter>');
   }
 
-  for (const f of doc.frames) {
+  for (let f of doc.frames) {
     const _s = body.length;
     if (f.kind === 'shape') {
       if (f.shape === 'rect') {
@@ -289,6 +289,21 @@ export function buildSVG(doc) {
         const v = f.variant || 'banner';
         if (v === 'bow') body.push(`<path d="${bowPath(f.x, f.y, f.w, f.h)}"${shapeAttrs(f)}/>`);
         else body.push(`<path d="${bannerPath(f.x, f.y, f.w, f.h, f.notch)}"${shapeAttrs(f)}/>`);
+      } else if (f.shape === 'stripes') {
+        const cx = f.cx != null ? f.cx : (f.x || 0) + (f.w || 0) / 2;
+        const cy = f.cy != null ? f.cy : (f.y || 0) + (f.h || 0) / 2;
+        const n = Math.max(1, f.count || 8);
+        const bw = f.bandW || 20;
+        const gap = f.gap != null ? f.gap : bw;
+        const len = f.len || 1000;
+        const pitch = bw + gap;
+        const bars = [];
+        const start = -((n - 1) * pitch) / 2;
+        for (let i = 0; i < n; i++) {
+          bars.push(`<rect x="${r2(-len / 2)}" y="${r2(start + i * pitch - bw / 2)}" width="${r2(len)}" height="${r2(bw)}"/>`);
+        }
+        const op = (f.opacity != null && f.opacity !== 1) ? ` opacity="${f.opacity}"` : '';
+        body.push(`<g transform="translate(${r2(cx)} ${r2(cy)}) rotate(${f.angle || 0})" fill="${f.fill || '#000'}"${op}>${bars.join('')}</g>`);
       } else if (f.shape === 'line') {
         body.push(`<line x1="${r2(f.x1)}" y1="${r2(f.y1)}" x2="${r2(f.x2)}" y2="${r2(f.y2)}" stroke="${f.stroke}" stroke-width="${r2(f.strokeW || 2)}"/>`);
       } else if (f.shape === 'arch') {
@@ -422,6 +437,21 @@ export function buildSVG(doc) {
       }
     } else if (f.kind === 'text') {
       const lh = f.lh || 1.2;
+      // 自動縮字適配：若文案在框內會被裁掉，逐步縮小字級（最多縮到 72%）讓內容完整顯示
+      if (f.text && !f.stackWords && !f.spread && !f.scatter && !f.diagonal && !f.pathLoop && !f.vertical && !f.fitH && !f.arc) {
+        const full = String(f.text).replace(/\s+/g, ' ').trim();
+        const fits = (s) => {
+          const ml = Math.max(1, Math.floor(f.h / (s * lh)));
+          const ln = wrapLines(f.text, s, f.family, f.weight, f.w, ml);
+          return ln.join(' ').replace(/\s+/g, ' ').trim().length >= full.length - 1;
+        };
+        if (!fits(f.size)) {
+          let s = f.size;
+          const floor = f.size * (f.role === 't' ? 0.62 : 0.55);
+          while (s > floor) { s *= 0.94; if (fits(s)) break; }
+          f = { ...f, size: Math.max(s, floor) };
+        }
+      }
       const maxLines = Math.max(1, Math.floor(f.h / (f.size * lh)));
       const lines = f.stackWords
         ? String(f.text || '').split(/\s+/).filter(Boolean)
