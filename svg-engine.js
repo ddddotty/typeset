@@ -6,19 +6,66 @@ function ctx() {
   return _c;
 }
 
-export function wrapLines(text, size, family, weight, maxW, maxLines) {
+const graphemes = typeof Intl.Segmenter === 'function'
+  ? new Intl.Segmenter('zh-Hant', { granularity: 'grapheme' }) : null;
+const chars = (text) => graphemes ? Array.from(graphemes.segment(text), (s) => s.segment) : Array.from(text);
+const noStart = /^[，。、；：！？）〕】〉》」』〗〙〛,.!?;:%％…]/u;
+const noEnd = /[（〔【〈《「『〖〘〚]$/u;
+
+export function textWidth(text, size, family, weight, spacing = 0) {
   const c = ctx();
   c.font = `${weight || 400} ${size}px ${family}`;
-  const words = String(text || '').split(/\s+/).filter(Boolean);
+  return c.measureText(text).width + Math.max(0, chars(text).length - 1) * spacing;
+}
+
+export function wrapLines(text, size, family, weight, maxW, maxLines, spacing = 0) {
+  const width = (s) => textWidth(s, size, family, weight, spacing);
   const lines = [];
-  let cur = '';
-  for (const w of words) {
-    const t = cur ? cur + ' ' + w : w;
-    if (c.measureText(t).width <= maxW || !cur) cur = t;
-    else { lines.push(cur); cur = w; }
+  for (const paragraph of String(text || '').replace(/\r\n?/g, '\n').split('\n')) {
+    // Keep Latin words together; CJK and overlong words may break by grapheme.
+    const tokens = [];
+    for (const unit of chars(paragraph)) {
+      if (/^[A-Za-z0-9'’_\-]$/.test(unit) && /^[A-Za-z0-9'’_\-]+$/.test(tokens[tokens.length - 1] || '')) tokens[tokens.length - 1] += unit;
+      else tokens.push(unit);
+    }
+    let cur = '';
+    const flush = () => { lines.push(cur.trimEnd()); cur = ''; };
+    for (const token of tokens) {
+      if (/^\s+$/u.test(token)) { if (cur) cur += ' '; continue; }
+      const pieces = width(token) > maxW ? chars(token) : [token];
+      for (const piece of pieces) {
+        if (cur && width(cur + piece) > maxW) {
+          cur = cur.trimEnd();
+          let carry = '';
+          // Move punctuation with its neighbour rather than orphaning it.
+          while (cur && (noEnd.test(cur) || (noStart.test(piece) && !carry))) {
+            const units = chars(cur.trimEnd());
+            carry = units.pop() + carry;
+            cur = units.join('');
+          }
+          if (cur) flush();
+          cur = carry;
+        }
+        cur += piece;
+      }
+    }
+    if (cur || !tokens.length) flush();
   }
-  if (cur) lines.push(cur);
   return maxLines ? lines.slice(0, Math.max(1, maxLines)) : lines;
+}
+
+export function fitTextFrame(frame) {
+  if (frame.textFitted || frame.kind !== 'text' || !frame.text || frame.stackWords || frame.spread || frame.scatter || frame.diagonal || frame.pathLoop || frame.vertical || frame.fitH || frame.arc || frame.fill) return frame;
+  const lh = frame.lh || 1.2;
+  const floor = frame.size * (frame.role === 't' ? 0.62 : 0.55);
+  const fits = (size) => {
+    const lines = wrapLines(frame.text, size, frame.family, frame.weight, frame.w, null, frame.ls || 0);
+    return size + (lines.length - 1) * size * lh <= frame.h + 0.1
+      && lines.every((line) => textWidth(line, size, frame.family, frame.weight, frame.ls || 0) <= frame.w + 0.1);
+  };
+  let size = frame.size;
+  while (size > floor && !fits(size)) size = Math.max(floor, size * 0.94);
+  return { ...frame, size, textFitted: true, textOverflow: !fits(size) };
 }
 
 export function coverRect(fw, fh, nw, nh, zoom) {
@@ -437,25 +484,11 @@ export function buildSVG(doc) {
       }
     } else if (f.kind === 'text') {
       const lh = f.lh || 1.2;
-      // 自動縮字適配：若文案在框內會被裁掉，逐步縮小字級（最多縮到 72%）讓內容完整顯示
-      if (f.text && !f.stackWords && !f.spread && !f.scatter && !f.diagonal && !f.pathLoop && !f.vertical && !f.fitH && !f.arc) {
-        const full = String(f.text).replace(/\s+/g, ' ').trim();
-        const fits = (s) => {
-          const ml = Math.max(1, Math.floor(f.h / (s * lh)));
-          const ln = wrapLines(f.text, s, f.family, f.weight, f.w, ml);
-          return ln.join(' ').replace(/\s+/g, ' ').trim().length >= full.length - 1;
-        };
-        if (!fits(f.size)) {
-          let s = f.size;
-          const floor = f.size * (f.role === 't' ? 0.62 : 0.55);
-          while (s > floor) { s *= 0.94; if (fits(s)) break; }
-          f = { ...f, size: Math.max(s, floor) };
-        }
-      }
-      const maxLines = Math.max(1, Math.floor(f.h / (f.size * lh)));
+      f = fitTextFrame(f);
+      const maxLines = Math.max(1, 1 + Math.floor((f.h - f.size) / (f.size * lh)));
       const lines = f.stackWords
         ? String(f.text || '').split(/\s+/).filter(Boolean)
-        : wrapLines(f.text, f.size, f.family, f.weight, f.w, maxLines);
+        : wrapLines(f.text, f.size, f.family, f.weight, f.w, maxLines, f.ls || 0);
       const anchor = f.align === 'center' ? 'middle' : 'start';
       const tx = r2(f.align === 'center' ? f.x + f.w / 2 : f.x);
       const ls = f.ls ? ` letter-spacing="${f.ls}"` : '';
@@ -594,7 +627,7 @@ export function buildSVG(doc) {
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
-    `width="${doc.w}" height="${doc.h}" viewBox="0 0 ${doc.w} ${doc.h}">`,
+    `width="${doc.physicalSize ? doc.physicalSize.width + 'mm' : doc.w}" height="${doc.physicalSize ? doc.physicalSize.height + 'mm' : doc.h}" viewBox="0 0 ${doc.w} ${doc.h}">`,
     `<rect width="${doc.w}" height="${doc.h}" fill="${doc.bg}"/>`,
     `<defs>${defs.join('')}</defs>`,
     body.join('\n'),

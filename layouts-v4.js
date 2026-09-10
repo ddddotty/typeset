@@ -4,7 +4,7 @@
 // 擴充：在對應 category 的 variants 加一筆 {id,name,desc,frames(W,H)}。
 
 export const CANVASES = [
-  { id: 'a4', name: 'A4 直式', w: 1000, h: 1414 },
+  { id: 'a4', name: 'A4 直式', w: 1000, h: 1000 * 297 / 210, physicalSize: { width: 210, height: 297 } },
   { id: 'sq', name: '正方形', w: 1080, h: 1080 },
   { id: '45', name: '4:5 直式', w: 1080, h: 1350 },
   { id: '916', name: '9:16 直式', w: 1080, h: 1920 },

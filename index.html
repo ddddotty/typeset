@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,9 +15,10 @@
 <meta name="twitter:description" content="上傳照片，自動套用版型並產生排版，可下載 SVG / PNG / JPG。">
 <meta name="twitter:image" content="assets/og-image.png?v=v3">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230e0e0d'/%3E%3Crect x='16' y='24' width='68' height='9' fill='%23e9e7e1'/%3E%3Crect x='45.5' y='24' width='9' height='54' fill='%23e9e7e1'/%3E%3Crect x='24' y='70' width='16' height='9' fill='%23d97757'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./studio.css?v=5.5">
 <script src="./support.js"></script>
 </head>
-<body>
+<body class="tg-compact">
 <x-dc>
 <helmet>
   <style>
@@ -35,7 +36,7 @@
     .toc-row:hover { background: #1a1a18; }
   </style>
 </helmet>
-<div data-screen-label="Typeset Generator v4" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; color: #e9e7e1; background: #0e0e0d; overflow: hidden;">
+<div id="tg-workspace" aria-hidden="{{ hasDialog }}" inert="{{ inertValue }}" data-screen-label="Typeset Generator v5.5" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; color: #e9e7e1; background: #0e0e0d; overflow: hidden;">
 
   <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
     <div style="position: fixed; inset: 0; z-index: 9999; background: #0e0e0d; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 32px; gap: 22px;">
@@ -47,107 +48,36 @@
     </div>
   </sc-if>
 
-  <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #161614; border-bottom: 1px solid #262624; flex: none;">
-    <div onClick="{{ goGen }}" style="font-weight: 700; font-size: 15px; letter-spacing: 1.2px; cursor: pointer;" style-hover="color: #d97757;">TYPESET<span style="color: #6e6d66; font-weight: 400; letter-spacing: 0.7px;"> · 排版產生器 Layout Generator</span></div>
-    <div style="display: flex; gap: 4px; background: #0e0e0d; border-radius: 8px; padding: 3px;">
-      <button onClick="{{ goGen }}" style="padding: 6px 14px; border: none; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; background: {{ genTabBg }}; color: {{ genTabFg }}; font-weight: 600; letter-spacing: 0.9px;">產生器 Generator</button>
-      <button onClick="{{ goLib }}" style="padding: 6px 14px; border: none; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; background: {{ libTabBg }}; color: {{ libTabFg }}; font-weight: 600; letter-spacing: 0.9px;">版型庫 Library</button>
-      <button onClick="{{ goBook }}" style="padding: 6px 14px; border: none; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; background: {{ bookTabBg }}; color: {{ bookTabFg }}; font-weight: 600; letter-spacing: 0.9px;">圖鑑電子書 Handbook</button>
+  <div class="tg-header">
+    <div class="tg-topbar">
+      <button class="tg-brand" onClick="{{ goGen }}" disabled="{{ shuffling }}">TYPESET<small> · 排版產生器 Layout Generator</small></button>
+      <nav class="tg-nav" aria-label="主要導覽">
+        <button class="tg-btn quiet" onClick="{{ goGen }}" disabled="{{ shuffling }}" aria-pressed="{{ isGen }}"><span class="tg-label"><span>產生器</span><small lang="en">Generator</small></span></button>
+        <button class="tg-btn quiet" onClick="{{ goBook }}" disabled="{{ shuffling }}" aria-pressed="{{ isBook }}"><span class="tg-label"><span>圖鑑電子書</span><small lang="en">Handbook</small></span></button>
+      </nav>
+      <div class="tg-spacer"></div>
+      <span class="tg-save" role="status" aria-live="polite">{{ draftStatus }}<span class="tg-en" lang="en">{{ draftStatusEn }}</span></span>
+      <button class="tg-btn" onClick="{{ openFavorites }}" disabled="{{ shuffling }}"><span class="tg-label"><span>♡ 收藏 {{ favoriteCount }}</span><small lang="en">Favorites</small></span></button>
+      <button class="tg-btn primary" onClick="{{ openDownload }}" disabled="{{ shuffling }}"><span class="tg-label"><span>↓ 下載作品</span><small lang="en">Export</small></span></button>
     </div>
-    <div style="font-size: 11px; color: #6e6d66; letter-spacing: 0.7px;">{{ statusLabel }}</div>
-    <div style="flex: 1;"></div>
-    <button onClick="{{ resetLayout }}" title="清除拖曳位置與縮放，回到版型預設排列" style="padding: 7px 13px; border: 1px solid #3a3a37; background: #1d1d1b; color: #a8a69f; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.9px;" style-hover="background: #262624; color: #e9e7e1;">↺ 重置版面</button>
-    <button onClick="{{ randVariant }}" style="padding: 7px 13px; border: 1px solid #3a3a37; background: #1d1d1b; color: #e9e7e1; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.9px;" style-hover="background: #262624;">同類換版 Variant</button>
-    <button onClick="{{ randLayout }}" style="padding: 7px 13px; border: 1px solid #3a3a37; background: #1d1d1b; color: #e9e7e1; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.9px;" style-hover="background: #262624;">換版型 Layout</button>
-    <button onClick="{{ randAll }}" style="padding: 7px 16px; border: 1px solid #e9e7e1; background: #e9e7e1; color: #141414; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; letter-spacing: 1.2px;" style-hover="background: #ffffff;">全部隨機 Shuffle</button>
-  </div>
-
-  <div style="flex: 1; display: flex; min-height: 0;">
-
-    <sc-if value="{{ isLib }}" hint-placeholder-val="{{ false }}">
-      <div id="lib-scroll" style="flex: 1; overflow-y: auto; padding: 28px; letter-spacing: 0.5px;">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px;">
-          <div>
-            <div style="font-size: 17px; font-weight: 700; letter-spacing: 1.6px;">目錄 <span style="font-size: 12px; color: #8a8880; font-weight: 600; letter-spacing: 1.2px; margin-left: 4px;">CONTENTS</span></div>
-            <div style="font-size: 10px; color: #6e6d66; margin-top: 4px; letter-spacing: 1.2px;">{{ tocThemeLabel }}</div>
-          </div>
-          <div style="font-size: 10px; color: #6e6d66; letter-spacing: 1px;">{{ tocLayoutLabel }}</div>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid #242422;">
-          <sc-for list="{{ tocItems }}" as="t" hint-placeholder-count="10">
-            <button onClick="{{ t.scroll }}" style="display: flex; flex-direction: column; gap: 11px; padding: 0; border: none; background: transparent; cursor: pointer; font-family: inherit; color: inherit; text-align: left;">
-              <div style="position: relative; aspect-ratio: 1 / 1; width: 100%; border: 1px solid #242422; border-radius: 6px; overflow: hidden; background: #14140f; display: flex; align-items: center; justify-content: center;" style-hover="border-color: #4a4a44; background: #1a1a16;">
-                <span style="position: absolute; top: 10px; left: 12px; font-size: 22px; font-weight: 700; color: #2c2c27; letter-spacing: 1px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">{{ t.num }}</span>
-                {{ t.icon }}
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 3px; padding: 0 2px;">
-                <div style="font-size: 13px; font-weight: 700; letter-spacing: 1.4px;">{{ t.name }}</div>
-                <div style="font-size: 9px; color: #6e6d66; letter-spacing: 1.3px; text-transform: uppercase;">{{ t.en }}</div>
-                <div style="font-size: 10px; color: #8a8880; line-height: 1.55; letter-spacing: 0.5px; margin-top: 4px;">{{ t.slogan }}</div>
-              </div>
-            </button>
-          </sc-for>
-        </div>
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: #6e6d66;">所有版型 ALL LAYOUTS</div>
-          <button onClick="{{ toggleAllLib }}" style="padding: 5px 11px; border: 1px solid #2e2e2a; background: #1a1a18; color: #b4b2a9; border-radius: 6px; font-size: 10px; font-family: inherit; cursor: pointer; letter-spacing: 0.9px;" style-hover="background: #222220; color: #e9e7e1;">{{ toggleAllLabel }}</button>
-        </div>
-        <sc-for list="{{ libGroups }}" as="g" hint-placeholder-count="10">
-          <div id="lib-cat-{{ g.key }}" style="margin-bottom: 10px; border: 1px solid #242422; border-radius: 8px; overflow: hidden; background: {{ g.headerBg }};">
-            <button onClick="{{ g.toggle }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 13px 16px; border: none; background: transparent; cursor: pointer; font-family: inherit; color: #e9e7e1; text-align: left;" style-hover="background: #1c1c19;">
-              <div style="display: flex; align-items: baseline; gap: 10px;">
-                <div style="font-size: 14px; font-weight: 700; letter-spacing: 1px;">{{ g.name }}</div>
-                <div style="font-size: 11px; font-weight: 600; color: #8a8880; letter-spacing: 0.9px;">{{ g.en }}</div>
-              </div>
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #3a3a37; font-size: 14px; line-height: 1; color: #b4b2a9; font-weight: 400;">{{ g.toggleLabel }}</span>
-            </button>
-            <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
-              <div style="padding: 4px 16px 16px;">
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; margin: 4px 0 14px; padding: 14px 16px; background: #121210; border: 1px solid #242422; border-radius: 10px;">
-                  <div style="border-right: 1px solid #242422; padding-right: 14px;">
-                    <div style="font-size: 13px; font-weight: 700; color: #e9e7e1; letter-spacing: 0.5px; margin-bottom: 9px;">{{ g.slogan }}</div>
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                      <sc-for list="{{ g.guideDesc }}" as="d" hint-placeholder-count="3">
-                        <div style="display: flex; gap: 7px; font-size: 12px; line-height: 1.55; color: #a8a69e;">
-                          <span style="color: #5c5b55; flex: none;">·</span>
-                          <span>{{ d.text }}</span>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </div>
-                  <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                      <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #6e6d66; margin-bottom: 5px;">時機 WHEN</div>
-                      <div style="font-size: 12px; line-height: 1.55; color: #cfcdc6;">{{ g.guideWhen }}</div>
-                    </div>
-                    <div>
-                      <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #6e6d66; margin-bottom: 6px;">效果 EFFECT</div>
-                      <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                        <sc-for list="{{ g.guideEffects }}" as="e" hint-placeholder-count="3">
-                          <span style="font-size: 11px; padding: 3px 9px; border-radius: 11px; background: #26251f; color: #cbc8bf; border: 1px solid #34332c;">{{ e.text }}</span>
-                        </sc-for>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button onClick="{{ g.openBook }}" style="display: inline-flex; align-items: center; gap: 7px; margin: 0 0 14px; padding: 8px 14px; border: 1px solid #34332c; background: #1a1a16; color: #cbc8bf; border-radius: 7px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.8px;" style-hover="background: #232019; color: #fff; border-color: #5a564a;">📖 看圖鑑解說 Read in Handbook</button>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px;">
-                  <sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="0">
-                    <div onClick="{{ c.pick }}" style="background: #161614; border: 1px solid {{ c.border }}; border-radius: 8px; overflow: hidden; cursor: pointer;" style-hover="border-color: #8a8880;">
-                      {{ c.img }}
-                      <div style="padding: 8px 10px;">
-                        <div style="font-size: 12px; font-weight: 700;">{{ c.name }}</div>
-                        <div style="font-size: 10px; color: #6e6d66; margin-top: 3px; letter-spacing: 0.4px;">{{ c.theme }}</div>
-                      </div>
-                    </div>
-                  </sc-for>
-                </div>
-              </div>
-            </sc-if>
-          </div>
-        </sc-for>
+    <sc-if value="{{ isGen }}">
+      <div class="tg-toolbar">
+        <button class="tg-btn tg-history-button" id="tg-undo" onClick="{{ undo }}" disabled="{{ undoDisabled }}" title="復原 ⌘/Ctrl Z" aria-label="復原 Undo"><span aria-hidden="true">↶</span></button>
+        <button class="tg-btn tg-history-button" id="tg-redo" onClick="{{ redo }}" disabled="{{ redoDisabled }}" title="重做 ⌘/Ctrl Shift Z" aria-label="重做 Redo"><span aria-hidden="true">↷</span></button>
+        <div class="tg-divider"></div>
+        <button class="tg-btn quiet" onClick="{{ resetLayout }}" disabled="{{ shuffling }}" title="回到版型預設排列，可復原"><span class="tg-label"><span>重置版面</span><small lang="en">Reset</small></span></button>
+        <button class="tg-btn" onClick="{{ randVariant }}" disabled="{{ layoutLocked }}"><span class="tg-label"><span>同類換版</span><small lang="en">Variant</small></span></button>
+        <button class="tg-btn" onClick="{{ randLayout }}" disabled="{{ layoutLocked }}"><span class="tg-label"><span>換版型</span><small lang="en">Layout</small></span></button>
+        <button class="tg-btn" onClick="{{ randAll }}" disabled="{{ allLocked }}"><span class="tg-label"><span>{{ shuffleLabel }}</span><small lang="en">{{ shuffleLabelEn }}</small></span></button>
+        <button class="tg-btn primary" onClick="{{ openCompare }}" disabled="{{ allLocked }}"><span class="tg-label"><span>▦ 比較 4 個版本</span><small lang="en">Compare 4</small></span></button>
+        <div class="tg-spacer"></div>
+        <span class="tg-status">{{ statusLabel }}</span>
       </div>
     </sc-if>
+    <sc-if value="{{ notice }}"><div class="tg-notice" role="status" aria-live="polite">{{ notice }}</div></sc-if>
+  </div>
+
+  <div class="tg-integration-workspace" inert="{{ shuffleInert }}" aria-busy="{{ shuffling }}" style="flex: 1; display: flex; min-height: 0;">
 
     <sc-if value="{{ isBook }}" hint-placeholder-val="{{ false }}">
       <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; background: #0e0e0d; position: relative; letter-spacing: 0.5px; overflow: hidden;">
@@ -218,36 +148,46 @@
 
     <sc-if value="{{ isGen }}" hint-placeholder-val="{{ true }}">
 
-      <div style="width: 220px; flex: none; background: #161614; border-right: 1px solid #262624; overflow-y: auto; display: flex; flex-direction: column; letter-spacing: 0.7px;">
-        <div style="padding: 14px 14px 8px; display: flex; align-items: center; justify-content: space-between;">
-          <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6e6d66;">版型 LAYOUTS</div>
-          <button onClick="{{ toggleLockLayout }}" title="鎖定後不被隨機更動" style="padding: 3px 9px; border-radius: 10px; border: 1px solid {{ lockLayoutBorder }}; background: {{ lockLayoutBg }}; color: {{ lockLayoutFg }}; font-size: 11px; cursor: pointer; font-family: inherit;">{{ lockLayoutLabel }}</button>
-        </div>
-        <div style="padding: 4px 10px 16px; display: flex; flex-direction: column; gap: 3px;">
-          <sc-for list="{{ catList }}" as="cat" hint-placeholder-count="10">
-            <button onClick="{{ cat.pick }}" style="display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 5px 10px; border-radius: 6px; border: none; background: {{ cat.bgc }}; cursor: pointer; font-size: 13px; text-align: left; font-family: inherit; color: {{ cat.fgc }}; font-weight: {{ cat.fw }}; line-height: 1.35; letter-spacing: 0.7px;" style-hover="background: #20201e;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ cat.dot }}; flex: none; margin-top: 4px;"></span>
-              <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;"><span style="white-space: nowrap;">{{ cat.name }}</span><span style="font-size: 10px; color: #6e6d66; font-weight: 400; letter-spacing: 0.4px; white-space: nowrap;">{{ cat.en }}</span></span>
+      <aside class="tg-icon-rail" aria-label="選擇版型風格">
+        <div class="tg-rail-head"><span>版型 LAYOUTS</span></div>
+        <nav class="tg-rail-icons" aria-label="版型分類">
+          <sc-for list="{{ pickerCategories }}" as="pc" hint-placeholder-count="0">
+            <button class="tg-rail-button" onClick="{{ pc.pick }}" title="{{ pc.title }}" aria-label="{{ pc.title }}" aria-expanded="{{ pc.active }}" aria-controls="tg-layout-picker" data-current="{{ pc.current }}">
+              <span class="tg-rail-icon" aria-hidden="true">{{ pc.icon }}</span><span class="tg-rail-name"><span>{{ pc.name }}</span><small lang="en">{{ pc.en }}</small></span>
             </button>
-            <sc-if value="{{ cat.open }}" hint-placeholder-val="{{ false }}">
-              <div style="display: flex; flex-direction: column; gap: 1px; padding: 4px 0 8px 0; margin-left: 11px; border-left: 1px solid #2e2e2a;">
-                <sc-for list="{{ cat.variants }}" as="v" hint-placeholder-count="5">
-                  <button onClick="{{ v.pick }}" style="display: block; width: 100%; padding: 6px 10px 6px 14px; border-radius: 5px; border: 1px solid {{ v.border }}; background: {{ v.bgc }}; cursor: pointer; text-align: left; font-family: inherit; color: {{ v.fgc }}; line-height: 1.4;" style-hover="background: #24241f;">
-                    <div style="font-size: 11px; letter-spacing: 0.7px;">{{ v.name }}</div>
-                    <div style="font-size: 10px; color: #6e6d66; letter-spacing: 0.4px;">{{ v.themeEn }}</div>
-                  </button>
-                </sc-for>
-              </div>
-            </sc-if>
           </sc-for>
-        </div>
-        <div style="margin-top: auto; position: sticky; bottom: 0; background: #161614; padding: 9px 11px; border-top: 1px solid #242422; display: flex; gap: 7px;">
-          <button onClick="{{ openFeedback }}" title="問題回報 / 意見回饋" style="flex: 1; padding: 8px 8px; border: 1px solid #2e2e2a; background: #1a1a18; border-radius: 6px; font-size: 11px; letter-spacing: 1.2px; color: #b4b2a9; cursor: pointer; font-family: inherit; text-align: center;" style-hover="background: #222220; color: #e9e7e1;">Feedback</button>
-          <a href="https://portaly.cc/dotty/support" target="_blank" rel="noopener" title="贊助支持" style="flex: 1; padding: 8px 8px; border: 1px solid #2e2e2a; background: #1a1a18; border-radius: 6px; font-size: 11px; letter-spacing: 1.2px; color: #b4b2a9; text-decoration: none; cursor: pointer; font-family: inherit; text-align: center;" style-hover="background: #222220; color: #e9e7e1;">Support</a>
-        </div>
-      </div>
+        </nav>
+        <div class="tg-rail-foot"><button onClick="{{ openFeedback }}" title="問題回報／意見回饋">Feedback</button><a href="https://portaly.cc/dotty/support" target="_blank" rel="noopener" title="贊助支持">Support</a></div>
+      </aside>
+      <sc-if value="{{ pickerOpen }}">
+        <aside class="tg-picker" id="tg-layout-picker" aria-labelledby="picker-title">
+          <div class="tg-picker-head"><div><h1 id="picker-title">{{ libraryName }}<small lang="en">{{ libraryEn }}</small></h1><span class="tg-picker-count">{{ libraryCount }}</span></div><button class="tg-btn quiet" onClick="{{ closePicker }}" aria-label="收起版型選單 Close layout picker">✕</button></div>
+          <div class="tg-picker-body" ref="{{ libraryScrollRef }}">
+            <p class="tg-picker-instruction">點選版型放大預覽，套用後繼續編輯。</p>
+            <div class="tg-library-context">{{ libraryContext }}<small lang="en">{{ libraryContextEn }}</small></div>
+            <sc-if value="{{ pickerCategoryMode }}">
+              <button class="tg-picker-guide-toggle" onClick="{{ toggleLibraryGuide }}" aria-expanded="{{ libraryGuideOpen }}" aria-controls="picker-guide"><span>{{ libraryGuideLabel }}</span><small lang="en">About this style</small></button>
+              <sc-if value="{{ libraryGuideOpen }}">
+                <section class="tg-library-guide" id="picker-guide" aria-label="版型使用說明">
+                  <div><h2>{{ librarySlogan }}</h2><p>{{ libraryWhen }}</p><ul><sc-for list="{{ libraryGuideDesc }}" as="ld" hint-placeholder-count="0"><li>{{ ld.text }}</li></sc-for></ul></div>
+                  <button class="tg-btn" onClick="{{ libraryOpenBook }}"><span class="tg-label"><span>看圖鑑解說</span><small lang="en">Read in Handbook</small></span></button>
+                </section>
+              </sc-if>
+            </sc-if>
+            <div class="tg-library-grid">
+              <sc-for list="{{ libraryCards }}" as="lc" hint-placeholder-count="0">
+                <button class="tg-library-card" onClick="{{ lc.preview }}" aria-label="{{ lc.previewLabel }}" aria-haspopup="dialog" data-current="{{ lc.active }}">
+                  <span class="tg-library-card-image">{{ lc.img }}<sc-if value="{{ lc.active }}"><span class="tg-library-current">目前使用</span></sc-if></span>
+                  <span class="tg-library-card-info"><span><strong>{{ lc.name }}</strong><small lang="en">{{ lc.theme }}</small></span></span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div class="tg-picker-foot"><span>{{ pickerProgress }}</span><small lang="en">{{ pickerProgressEn }}</small></div>
+        </aside>
+      </sc-if>
 
-      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto; padding: 20px; background: #0b0b0a; gap: 10px;">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: auto; padding: 18px; background: #0b0b0a; gap: 12px;">
         <div style="position: relative; width: {{ prevW }}px; height: {{ prevH }}px; flex: none; box-shadow: 0 12px 48px rgba(0,0,0,0.6);">
           {{ previewImg }}
           <sc-for list="{{ imgZones }}" as="z" hint-placeholder-count="0">
@@ -266,8 +206,8 @@
             <div style="position: absolute; top: {{ snapHTop }}px; left: 0; width: 100%; height: 1px; background: #ff8855; box-shadow: 0 0 4px rgba(255,136,85,0.55); pointer-events: none;"></div>
           </sc-if>
         </div>
-        <div style="font-size: 11px; color: #5c5b55; letter-spacing: 0.7px; display: flex; justify-content: center;">
-          <span>⌖ 拖曳移動元素 · 點文字編輯 · ⌥/Alt 拖曳＝複製（點副本可刪除）· 照片可拖曳構圖</span>
+        <div class="tg-help">
+          <span>拖曳調整構圖 · 點文字直接編輯 · ⌥/Alt 拖曳複製 · ⌘/Ctrl Z 復原</span>
         </div>
       </div>
 
@@ -286,7 +226,7 @@
           <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6e6d66;">照片 PHOTO</div>
           <label onDrop="{{ onDropPhotos }}" onDragOver="{{ onDragOverPhotos }}" onDragLeave="{{ onDragLeavePhotos }}" style="display: block; border: 1px dashed {{ uploadBorder }}; border-radius: 7px; padding: 10px 10px; text-align: center; font-size: 11px; letter-spacing: 0.7px; line-height: 1.5; color: #8a8880; cursor: pointer; background: {{ uploadBg }};" style-hover="background: #20201e;">
             {{ uploadHint }}
-            <input type="file" accept="image/*" multiple="{{ trueVal }}" onChange="{{ onUpload }}" style="display: none;" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple="{{ trueVal }}" onChange="{{ onUpload }}" style="display: none;" />
           </label>
           <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ false }}">
             <div style="display: flex; flex-direction: column; gap: 9px;">
@@ -334,8 +274,8 @@
             <button onClick="{{ resetCopy }}" title="回到預設文案" style="padding: 4px 10px; border-radius: 10px; border: 1px solid #3a3a37; background: #1d1d1b; color: #8a8880; font-size: 10px; cursor: pointer; font-family: inherit; letter-spacing: 0.7px;" style-hover="background: #262624; color: #d9d7d1;">↺ 重置文案</button>
           </div>
           <input type="text" value="{{ eyebrowVal }}" onChange="{{ setEyebrow }}" placeholder="Eyebrow (小標籤)" style="width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" />
-          <input type="text" value="{{ titleVal }}" onChange="{{ setTitle }}" placeholder="大標題" style="width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" />
-          <input type="text" value="{{ subVal }}" onChange="{{ setSub }}" placeholder="副標題" style="width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" />
+          <textarea rows="2" value="{{ titleVal }}" onChange="{{ setTitle }}" placeholder="大標題" aria-label="大標題" maxlength="2000" style="resize: vertical; min-height: 56px; line-height: 1.5; width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" ></textarea>
+          <textarea rows="2" value="{{ subVal }}" onChange="{{ setSub }}" placeholder="副標題" aria-label="副標題" maxlength="2000" style="resize: vertical; min-height: 56px; line-height: 1.5; width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" ></textarea>
           <input type="text" value="{{ dateVal }}" onChange="{{ setDate }}" placeholder="日期" style="width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" />
           <input type="text" value="{{ infoVal }}" onChange="{{ setInfo }}" placeholder="時間 / 地點" style="width: 100%; padding: 7px 10px; border: 1px solid #33332f; border-radius: 6px; font-size: 11px; font-family: inherit; background: #1d1d1b; color: #e9e7e1; letter-spacing: 0.7px; line-height: 1.5;" />
         </div>
@@ -343,7 +283,6 @@
         <div style="padding: 16px 18px; border-bottom: 1px solid #242422; display: flex; flex-direction: column; gap: 10px;">
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6e6d66;">文字 TYPE</div>
-            <button onClick="{{ toggleLockFont }}" title="鎖定後不被隨機更動" style="padding: 4px 10px; border-radius: 10px; border: 1px solid {{ lockFontBorder }}; background: {{ lockFontBg }}; color: {{ lockFontFg }}; font-size: 10px; cursor: pointer; font-family: inherit; letter-spacing: 0.7px;">{{ lockFontLabel }}</button>
 
           </div>
           <div>
@@ -376,26 +315,76 @@
           </div>
         </div>
 
-        <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
-          <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6e6d66;">下載 EXPORT</div>
-          <div style="display: flex; align-items: center; gap: 7px;">
-            <span style="font-size: 10px; color: #a8a69f; letter-spacing: 0.7px;">點陣倍率·Scale</span>
-            <sc-for list="{{ scaleList }}" as="sc" hint-placeholder-count="3">
-              <button onClick="{{ sc.pick }}" style="padding: 5px 12px; border-radius: 6px; border: 1px solid {{ sc.border }}; background: {{ sc.bgc }}; cursor: pointer; font-size: 11px; font-family: inherit; color: {{ sc.fgc }}; letter-spacing: 0.7px;">{{ sc.name }}</button>
-            </sc-for>
-          </div>
-          <button onClick="{{ exportSVG }}" style="width: 100%; padding: 10px; border: 1px solid #e9e7e1; background: #e9e7e1; color: #141414; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; letter-spacing: 1.2px;" style-hover="background: #ffffff;">SVG（Illustrator 可編輯）</button>
-          <div style="display: flex; gap: 9px;">
-            <button onClick="{{ exportPNG }}" style="flex: 1; padding: 9px; border: 1px solid #3a3a37; background: #1d1d1b; color: #e9e7e1; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.8px;" style-hover="background: #262624;">PNG {{ scaleName }}</button>
-            <button onClick="{{ exportJPG }}" style="flex: 1; padding: 9px; border: 1px solid #3a3a37; background: #1d1d1b; color: #e9e7e1; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; letter-spacing: 0.8px;" style-hover="background: #262624;">JPG {{ scaleName }}</button>
-          </div>
-          <div style="font-size: 9px; color: #5c5b55; line-height: 1.7; letter-spacing: 0.5px;">SVG 文字 / 形狀為向量，照片內嵌。Vectors stay editable.</div>
-        </div>
 
       </div>
     </sc-if>
   </div>
 </div>
+<sc-if value="{{ startup }}"><div class="tg-startup" role="status">{{ draftStatus }}</div></sc-if>
+<sc-if value="{{ compareOpen }}">
+  <div class="tg-overlay" onClick="{{ dismissBackdrop }}">
+    <section class="tg-dialog" role="dialog" aria-modal="true" aria-labelledby="compare-title" onKeyDown="{{ dialogKey }}" ref="{{ dialogRef }}">
+      <div class="tg-dialog-head">
+        <div><h2 id="compare-title">{{ compareTitle }}<sc-if value="{{ compareTitleEn }}"><small lang="en">{{ compareTitleEn }}</small></sc-if></h2><p>{{ compareDescription }}</p></div>
+        <div class="tg-spacer"></div>
+        <button class="tg-btn quiet" onClick="{{ closeDialog }}" aria-label="關閉比較">✕</button>
+      </div>
+      <div class="tg-dialog-body">
+        <sc-if value="{{ dialogNotice }}"><p class="tg-notice" role="status" aria-live="polite">{{ dialogNotice }}</p></sc-if>
+        <sc-if value="{{ compareEmpty }}"><div class="tg-empty">還沒有收藏版本。<br />比較排版時按下「收藏」，就能在這裡找到它。</div></sc-if>
+        <div class="tg-compare-grid">
+          <sc-for list="{{ comparisonCards }}" as="c">
+            <article class="tg-card">
+              <button class="tg-card-preview" onClick="{{ c.apply }}" aria-label="{{ c.applyLabel }}">{{ c.img }}</button>
+              <div class="tg-card-content"><strong>{{ c.name }}</strong><p>{{ c.detail }}</p>
+                <div class="tg-card-actions"><button class="tg-btn primary" onClick="{{ c.apply }}"><span class="tg-label"><span>套用此版</span><small lang="en">Apply</small></span></button><button class="tg-btn" onClick="{{ c.favorite }}" aria-pressed="{{ c.saved }}"><span class="tg-label"><span>{{ c.favoriteLabel }}</span><small lang="en">{{ c.favoriteLabelEn }}</small></span></button></div>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+      <div class="tg-dialog-foot"><span class="tg-save">{{ compareFooter }}</span><div class="tg-spacer"></div><button class="tg-btn" onClick="{{ saveCurrentFavorite }}"><span class="tg-label"><span>♡ 收藏目前作品</span><small lang="en">Save current</small></span></button><button class="tg-btn primary" onClick="{{ refreshCompare }}" disabled="{{ allLocked }}"><span class="tg-label"><span>再產生 4 個版本</span><small lang="en">Generate 4 more</small></span></button></div>
+    </section>
+  </div>
+</sc-if>
+<sc-if value="{{ downloadOpen }}">
+  <div class="tg-overlay" onClick="{{ dismissBackdrop }}">
+    <section class="tg-dialog small" role="dialog" aria-modal="true" aria-labelledby="download-title" onKeyDown="{{ dialogKey }}" ref="{{ dialogRef }}">
+      <div class="tg-dialog-head"><div><h2 id="download-title">下載作品 <small lang="en">Export</small></h2><p>{{ exportDimensions }}</p><sc-if value="{{ exportPixelDimensions }}"><p>{{ exportPixelDimensions }}</p></sc-if></div><div class="tg-spacer"></div><button class="tg-btn quiet" onClick="{{ closeDialog }}" aria-label="關閉下載">✕</button></div>
+      <div class="tg-dialog-body">
+        <sc-if value="{{ dialogNotice }}"><p class="tg-notice" role="status" aria-live="polite">{{ dialogNotice }}</p></sc-if>
+        <sc-if value="{{ textWarning }}"><p class="tg-notice">{{ textWarning }}</p></sc-if>
+        <label class="tg-section-label">圖片解析度 <span lang="en">Resolution</span></label>
+        <div class="tg-scale"><sc-for list="{{ scaleList }}" as="sc"><button class="tg-btn" onClick="{{ sc.pick }}" aria-pressed="{{ sc.active }}">{{ sc.name }}</button></sc-for></div>
+        <div class="tg-download-options">
+          <button class="tg-btn primary" onClick="{{ exportPNG }}" disabled="{{ exporting }}"><span>.png</span><small>適合社群與螢幕閱讀</small></button>
+          <button class="tg-btn" onClick="{{ exportJPG }}" disabled="{{ exporting }}"><span>.jpg</span><small>檔案較小，方便分享</small></button>
+          <button class="tg-btn" onClick="{{ exportSVG }}" disabled="{{ exporting }}"><span>.svg</span><small>可在 Illustrator 接續編輯</small></button>
+        </div>
+        <p class="tg-local-note">{{ exportStatus }}<br />SVG 文字需在開啟的裝置上有對應字型。需要跨裝置保留相同外觀時，請選 PNG 或 JPG。<sc-if value="{{ exportPixelDimensions }}"><br />A4 的 SVG 已設定紙張尺寸；PNG／JPG 列印時，請將紙張設為 A4。</sc-if></p>
+      </div>
+      <div class="tg-dialog-foot">
+        <button class="tg-btn" onClick="{{ downloadProject }}"><span class="tg-label"><span>↓ 備份完整草稿</span><small lang="en">Back up project</small></span></button>
+        <label class="tg-btn" tabindex="0" onKeyDown="{{ activateFileLabel }}"><span class="tg-label"><span>開啟草稿</span><small lang="en">Open project</small></span><input type="file" accept=".json,application/json" onChange="{{ importProject }}" style="display:none;" /></label>
+        <p class="tg-local-note" style="margin:0;">草稿包含照片與收藏，可換電腦或換網址繼續編輯。自動儲存只在目前瀏覽器，清除網站資料會移除本機草稿。</p>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{ libraryPreviewOpen }}">
+  <div class="tg-overlay" onClick="{{ dismissBackdrop }}">
+    <section class="tg-dialog tg-layout-preview" role="dialog" aria-modal="true" aria-labelledby="library-preview-title" onKeyDown="{{ dialogKey }}" ref="{{ dialogRef }}">
+      <div class="tg-dialog-head"><div><h2 id="library-preview-title">{{ libraryPreviewName }}<small lang="en">{{ libraryPreviewEn }}</small></h2><p>{{ libraryPreviewDetail }}</p></div><div class="tg-spacer"></div><button class="tg-btn quiet" onClick="{{ closeDialog }}" aria-label="關閉版型預覽">✕</button></div>
+      <div class="tg-dialog-body">
+        <div class="tg-layout-stage"><button class="tg-btn quiet tg-layout-arrow" onClick="{{ libraryPreviewPrev }}" aria-label="上一個版型 Previous layout">‹</button><div class="tg-layout-artwork">{{ libraryPreviewImg }}</div><button class="tg-btn quiet tg-layout-arrow" onClick="{{ libraryPreviewNext }}" aria-label="下一個版型 Next layout">›</button></div>
+        <sc-if value="{{ libraryPreviewWarning }}"><p class="tg-library-warning" role="status">{{ libraryPreviewWarning }}</p></sc-if>
+      </div>
+      <div class="tg-dialog-foot"><span class="tg-save">{{ libraryPreviewHint }}</span><div class="tg-spacer"></div><button class="tg-btn primary" onClick="{{ applyLibraryPreview }}"><span class="tg-label"><span>套用此版</span><small lang="en">Apply</small></span></button></div>
+    </section>
+  </div>
+</sc-if>
+
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
@@ -431,8 +420,22 @@ class Component extends DCLogic {
   };
   state = {
     ready: false,
+    draftStatus: '正在還原草稿…',
+    notice: '',
+    favorites: [],
+    candidates: [],
+    compareOpen: false,
+    compareMode: 'candidates',
+    downloadOpen: false,
+    shuffling: false,
+    exporting: false,
+    dialogNotice: '',
+    exportStatus: '照片會內嵌在下載的作品中。',
     view: 'gen',
-    libOpen: {},
+    pickerOpen: true,
+    libraryCatIdx: null,
+    libraryGuideOpen: false,
+    libraryPreview: null,
     bookPage: 0,
     bookDir: 1,
     bookMode: 'spread',
@@ -483,45 +486,318 @@ class Component extends DCLogic {
   }
 
   async componentDidMount() {
-    const [data, eng] = await Promise.all([
-      import('./layouts-v4.js'),
-      import('./svg-engine.js'),
-    ]);
-    this.data = data;
-    this.eng = eng;
     try {
-      const s = JSON.parse(localStorage.getItem('typeset-gen-v4') || 'null');
-      if (s && typeof s === 'object') this.setState(s);
-    } catch (e) {}
-    this.onResize = () => this.setState({ winW: window.innerWidth, winH: window.innerHeight });
-    window.addEventListener('resize', this.onResize);
-    this.onResize();
-    this.onKey = (e) => {
-      if (this.state.view !== 'book') return;
-      const tag = (e.target && e.target.tagName) || '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); this.bookStep(1); }
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); this.bookStep(-1); }
-      else if (e.key === 'Escape' && this.state.bookTocOpen) { this.setState({ bookTocOpen: false }); }
-    };
-    window.addEventListener('keydown', this.onKey);
-    this.setState({ ready: true });
+      const [data, eng, editor] = await Promise.all([
+        import('./layouts-v4.js?v=5.5'), import('./svg-engine.js?v=5.5'), import('./editor-state.js?v=5.5'),
+      ]);
+      this.data = data; this.eng = eng; this.editor = editor;
+      this._defaults = editor.snapshot(this.state);
+      this._store = new editor.DraftStore();
+      let recovered = null, status = '草稿會自動儲存在此瀏覽器', notice = '';
+      try {
+        const saved = await this._store.read();
+        if (saved) {
+          recovered = editor.unpackProject(saved, this._defaults, data);
+          status = '已還原本機草稿（含照片）';
+        } else {
+          const legacy = JSON.parse(localStorage.getItem('typeset-gen-v4') || 'null');
+          if (legacy) {
+            recovered = { document: editor.sanitizeDocument(legacy, this._defaults, data), favorites: [] };
+            status = '已還原舊版文字與設定';
+            notice = '舊版沒有保存照片，請重新加入照片；之後會連同草稿一起儲存。';
+          }
+        }
+      } catch (error) {
+        status = '自動儲存尚未可用';
+        notice = '無法還原本機草稿。你仍可編輯，請使用「下載作品 → 備份完整草稿」保留成果。';
+      }
+      const restoredDoc = recovered?.document || this._defaults;
+      // Removed lock controls must not leave restored projects locked.
+      const doc = { ...restoredDoc, locks: { ...restoredDoc.locks, layout: false, font: false } };
+      this._history = new editor.History(doc);
+      this.setState({ ...doc, favorites: recovered?.favorites || [], ready: true, draftStatus: status, notice });
+      this.onResize = () => this.setState({ winW: window.innerWidth, winH: window.innerHeight });
+      window.addEventListener('resize', this.onResize); this.onResize();
+      this.onKey = (e) => {
+        if (this._shuffling) { if (e.metaKey || e.ctrlKey) e.preventDefault(); return; }
+        if (e.key === 'Escape' && (this.state.compareOpen || this.state.downloadOpen || this.state.libraryPreview)) { this.closeDialog(); return; }
+        if (e.key === 'Escape' && this.state.pickerOpen) { this.closePicker(); return; }
+        const editing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '') || e.target?.isContentEditable;
+        if (!editing && !this.state.compareOpen && !this.state.downloadOpen && !this.state.libraryPreview && this.state.view === 'gen' && (e.metaKey || e.ctrlKey)) {
+          if (e.key.toLowerCase() === 'z') { e.preventDefault(); this.travelHistory(e.shiftKey ? 'redo' : 'undo'); return; }
+          if (e.key.toLowerCase() === 'y') { e.preventDefault(); this.travelHistory('redo'); return; }
+        }
+        if (this.state.view !== 'book' || editing || this.state.compareOpen || this.state.downloadOpen || this.state.libraryPreview) return;
+        if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) { e.preventDefault(); this.bookStep(1); }
+        else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); this.bookStep(-1); }
+        else if (e.key === 'Escape' && this.state.bookTocOpen) this.setState({ bookTocOpen: false });
+      };
+      this.onPageHide = () => { if (this._dirty) this.persistNow(); };
+      this.onBeforeUnload = (e) => { if (this._dirty) { e.preventDefault(); e.returnValue = ''; } };
+      window.addEventListener('keydown', this.onKey);
+      window.addEventListener('pagehide', this.onPageHide);
+      window.addEventListener('beforeunload', this.onBeforeUnload);
+    } catch (error) {
+      this.setState({ draftStatus: '載入失敗，請重新整理網頁或檢查網路連線。', notice: '網站未能完成載入。' });
+    }
   }
 
   componentWillUnmount() {
+    this._disposed = true;
+    clearTimeout(this._draftTimer);
+    clearTimeout(this._shuffleTimer);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('pagehide', this.onPageHide);
+    window.removeEventListener('beforeunload', this.onBeforeUnload);
   }
 
-  save(patch) {
-    if (patch && (('catIdx' in patch) || ('varIdx' in patch))) {
-      patch = { elemOff: {}, extraElems: [], editRole: null, ...patch };
+  save(patch = {}, group = null) {
+    if (!this._history || this._shuffling) return;
+    if (patch.locks?.layout || patch.locks?.font) patch = { ...patch, locks: { ...patch.locks, layout: false, font: false } };
+    if (('catIdx' in patch) || ('varIdx' in patch)) patch = { elemOff: {}, extraElems: [], editRole: null, ...patch };
+    if (!group && patch.copy) {
+      const changed = Object.keys(patch.copy).filter((key) => patch.copy[key] !== this.state.copy[key]);
+      if (changed.length === 1) group = 'copy-' + changed[0];
     }
+    if (!group && Object.keys(patch).length === 1 && ['titleScale', 'subScale', 'photoZoom', 'grainAmt', 'grainSize'].includes(Object.keys(patch)[0])) group = Object.keys(patch)[0];
     this.setState(patch, () => {
-      const { photos, ready, winW, winH, editRole, ...rest } = this.state;
-      try { localStorage.setItem('typeset-gen-v4', JSON.stringify(rest)); } catch (e) {}
+      if (this._history.record(this.state, group)) {
+        this.queueDraft();
+        this.forceUpdate();
+      }
     });
   }
+
+  queueDraft() {
+    this._dirty = true;
+    this._revision = (this._revision || 0) + 1;
+    this.setState({ draftStatus: '正在儲存…' });
+    clearTimeout(this._draftTimer);
+    this._draftTimer = setTimeout(() => this.persistNow(), 450);
+  }
+
+  persistNow() {
+    clearTimeout(this._draftTimer);
+    if (!this.editor || !this._store) return;
+    const revision = this._revision;
+    let project;
+    try { project = this.editor.packProject(this._shuffleStart || this.state, this.state.favorites); }
+    catch (error) { this.setState({ draftStatus: '尚未儲存，請下載草稿備份', notice: error.message }); return; }
+    this._writeChain = (this._writeChain || Promise.resolve()).catch(() => {}).then(() => this._store.write(project)).then(() => {
+      if (revision !== this._revision || this._disposed) return;
+      this._dirty = false;
+      this.setState({ draftStatus: '已儲存於此瀏覽器（含照片）' });
+    }).catch(() => {
+      if (!this._disposed && revision === this._revision) this.setState({ draftStatus: '自動儲存失敗，請備份草稿', notice: '瀏覽器儲存空間不足或無法寫入。請下載完整草稿備份，避免遺失照片與編輯內容。' });
+    });
+  }
+
+  travelHistory(direction) {
+    if (this._shuffling) return;
+    const doc = this._history?.[direction]();
+    if (doc) this.setState({ ...doc, editRole: null, notice: direction === 'undo' ? '已復原上一步' : '已重做' }, () => this.queueDraft());
+  }
+
+  closeDialog = () => {
+    this.setState({ compareOpen: false, downloadOpen: false, libraryPreview: null }, () => this._dialogTrigger?.focus?.());
+  };
+
+  showDialog(kind) {
+    this._dialogTrigger = document.activeElement;
+    this.setState({ compareOpen: kind === 'compare', downloadOpen: kind === 'download', libraryPreview: null, dialogNotice: '', editRole: null, view: 'gen', pickerOpen: false });
+  }
+
+  dialogRef = (el) => {
+    if (el && el !== this._dialogElement) requestAnimationFrame(() => el.querySelector('button')?.focus());
+    this._dialogElement = el;
+  };
+
+  dialogKey = (e) => {
+    if (this.state.libraryPreview && ['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      this.stepLibraryPreview(e.key === 'ArrowRight' ? 1 : -1);
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const items = Array.from(e.currentTarget.querySelectorAll('button:not(:disabled), input:not([type="file"]), [tabindex="0"]')).filter((el) => el.getClientRects().length);
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+  };
+
+  openLibrary = () => this.openPicker(this.state.libraryCatIdx ?? this.state.catIdx);
+
+  openPicker(index) {
+    if (!this.data.CATEGORIES[index]) return;
+    this._pickerTrigger = document.activeElement;
+    this.setState({ view: 'gen', pickerOpen: true, libraryCatIdx: index,
+      libraryGuideOpen: false, editRole: null },
+      () => this._libraryScroll?.scrollTo({ top: 0 }));
+  }
+
+  closePicker = () => {
+    this.setState({ pickerOpen: false }, () => this._pickerTrigger?.focus?.());
+  };
+
+  selectLibraryCategory(index) { this.openPicker(index); }
+
+  libraryScrollRef = (el) => { this._libraryScroll = el; };
+
+  // The same document drives thumbnails, the enlarged preview, and the applied result.
+  libraryDocument(catIdx, varIdx, source = this.state) {
+    const base = this.editor.snapshot(source);
+    const same = base.catIdx === catIdx && base.varIdx === varIdx;
+    return { ...base, catIdx, varIdx, ...(same ? {} : { elemOff: {}, extraElems: [], photoOff: {} }) };
+  }
+
+  openLibraryPreview(catIdx, varIdx) {
+    this._dialogTrigger = document.activeElement;
+    this.setState({ libraryPreview: { catIdx, varIdx, base: this.editor.snapshot(this.state) }, compareOpen: false, downloadOpen: false, editRole: null });
+  }
+
+  stepLibraryPreview(direction) {
+    const preview = this.state.libraryPreview;
+    if (!preview) return;
+    const count = this.data.CATEGORIES[preview.catIdx].variants.length;
+    this.setState({ libraryPreview: { ...preview, varIdx: (preview.varIdx + direction + count) % count } });
+  }
+
+  applyLibraryPreview = () => {
+    const preview = this.state.libraryPreview;
+    if (!preview) return;
+    this.save(this.libraryDocument(preview.catIdx, preview.varIdx, preview.base));
+    this.setState({ view: 'gen', pickerOpen: false, libraryPreview: null, notice: '已套用版型；可按「復原」回到剛才的作品。' }, () => document.getElementById?.('tg-undo')?.focus());
+  };
+
+  libraryVals() {
+    const st = this.state, d = this.data, eng = this.eng;
+    if (st.view !== 'gen') return { pickerOpen: false, pickerCategories: [], libraryCards: [], libraryPreviewOpen: false };
+    const ci = st.libraryCatIdx ?? st.catIdx;
+    const category = d.CATEGORIES[ci], guide = d.GUIDE[category.id] || {};
+    const refs = [ci, ...Object.keys(this._defaults).map((key) => st[key])];
+    if (st.pickerOpen && (!this._libraryCardsCache || refs.some((value, i) => value !== this._libraryCardsCache.refs[i]))) {
+      const visible = category.variants.map((_, varIdx) => ({ catIdx: ci, varIdx }));
+      const cards = visible.map(({ catIdx, varIdx }) => {
+        const cat = d.CATEGORIES[catIdx], variant = cat.variants[varIdx];
+        const preview = this.buildDoc({ state: this.libraryDocument(catIdx, varIdx) });
+        return {
+          key: cat.id + variant.id, name: variant.name, theme: this.sc(variant.theme),
+          active: catIdx === st.catIdx && varIdx === st.varIdx,
+          img: React.createElement('img', { src: eng.svgToDataUri(eng.buildSVG(preview)), alt: '', decoding: 'async', loading: 'lazy' }),
+          previewLabel: '預覽 ' + cat.name + ' · ' + variant.name,
+          preview: () => this.openLibraryPreview(catIdx, varIdx),
+        };
+      });
+      this._libraryCardsCache = { refs, cards };
+    }
+    const selected = st.libraryPreview;
+    let previewValues = { libraryPreviewOpen: false };
+    if (selected) {
+      const pc = d.CATEGORIES[selected.catIdx], pv = pc.variants[selected.varIdx];
+      const previewDoc = this.buildDoc({ state: this.libraryDocument(selected.catIdx, selected.varIdx, selected.base) });
+      const position = selected.varIdx;
+      previewValues = {
+        libraryPreviewOpen: true,
+        libraryPreviewName: pc.name + ' · ' + pv.name, libraryPreviewEn: this.sc(pv.theme),
+        libraryPreviewDetail: (position + 1) + ' / ' + pc.variants.length + ' · ' + previewDoc.canvas.name + ' · ' + d.FONTS[selected.base.fontIdx].name,
+        libraryPreviewHint: '左右方向鍵切換同類版型，套用後可復原。',
+        libraryPreviewImg: React.createElement('img', { src: eng.svgToDataUri(eng.buildSVG(previewDoc)), alt: pv.name + ' 放大預覽' }),
+        libraryPreviewWarning: previewDoc.frames.some((f) => f.textOverflow) ? '部分文字仍超出文字框，套用後可調整文案或字級。' : '',
+        libraryPreviewPrev: () => this.stepLibraryPreview(-1), libraryPreviewNext: () => this.stepLibraryPreview(1),
+        applyLibraryPreview: this.applyLibraryPreview,
+      };
+    }
+    return {
+      pickerOpen: st.pickerOpen, pickerCategoryMode: true,
+      closePicker: this.closePicker,
+      pickerProgress: '點左側分類，探索其他風格',
+      pickerProgressEn: 'Explore more styles',
+      pickerCategories: d.CATEGORIES.map((c, index) => ({
+        key: c.id, name: c.name, en: c.en, title: c.name + ' · ' + c.en,
+        active: st.pickerOpen && index === ci, current: index === st.catIdx,
+        icon: React.createElement('span', { dangerouslySetInnerHTML: { __html: this.TOC_ICONS[c.id] || '' } }),
+        pick: () => this.openPicker(index),
+      })),
+      libraryName: category.name, libraryEn: category.en,
+      libraryWhen: guide.when || category.desc, librarySlogan: guide.slogan || category.name,
+      libraryCount: category.variants.length + ' 個版型',
+      libraryContext: st.photos.length ? '使用你的照片與文案預覽' : '使用目前文案預覽 · 可加入照片',
+      libraryContextEn: st.photos.length ? 'Previewing your artwork' : 'Previewing your text',
+      libraryGuideOpen: st.libraryGuideOpen,
+      libraryGuideLabel: st.libraryGuideOpen ? '收合版型說明 −' : '了解這個風格 ＋',
+      libraryGuideDesc: (guide.desc || []).map((text, i) => ({ key: i, text })),
+      toggleLibraryGuide: () => this.setState({ libraryGuideOpen: !this.state.libraryGuideOpen }),
+      libraryOpenBook: () => this.setState({ view: 'book', pickerOpen: false, bookPage: ci * 7, bookDir: 1, bookTocOpen: false }),
+      libraryScrollRef: this.libraryScrollRef,
+      libraryCards: st.pickerOpen ? this._libraryCardsCache?.cards || [] : [],
+      ...previewValues,
+    };
+  }
+
+  generateCandidates(source = this.state) {
+    const st = source, base = this.editor.snapshot(st), pool = [];
+    this.data.CATEGORIES.forEach((cat, ci) => cat.variants.forEach((variant, vi) => {
+      if (st.locks.layout && (ci !== st.catIdx || vi !== st.varIdx)) return;
+      this.data.FONTS.forEach((font, fi) => {
+        if (st.locks.font && fi !== st.fontIdx) return;
+        pool.push({ catIdx: ci, varIdx: vi, fontIdx: fi });
+      });
+    }));
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, 4).map((pick) => ({
+      id: this.editor.uid(),
+      document: { ...base, ...pick, ...(pick.catIdx !== base.catIdx || pick.varIdx !== base.varIdx ? { elemOff: {}, extraElems: [], photoOff: {} } : {}) },
+    }));
+  }
+
+  refreshCompare = () => {
+    this.setState({ candidates: this.generateCandidates(), compareMode: 'candidates' });
+    this.showDialog('compare');
+  };
+
+  applyCandidate(candidate) {
+    this.save(candidate.document);
+    this.setState({ notice: '已套用版本；可按「復原」回到剛才的作品。' });
+    this.closeDialog();
+  }
+
+  favoriteCandidate(candidate) {
+    const existing = this.state.favorites.find((f) => f.id === candidate.id);
+    if (existing) {
+      this.setState({ favorites: this.state.favorites.filter((f) => f.id !== candidate.id) }, () => this.queueDraft());
+      return;
+    }
+    if (this.state.favorites.length >= this.editor.LIMITS.favorites) { this.setState({ dialogNotice: '最多收藏 12 個版本，請先取消部分收藏或備份草稿。' }); return; }
+    const doc = candidate.document;
+    const cat = this.data.CATEGORIES[doc.catIdx], variant = cat.variants[doc.varIdx];
+    const favorite = { id: candidate.id, name: cat.name + ' · ' + variant.name, document: this.editor.snapshot(doc) };
+    const favorites = [...this.state.favorites, favorite];
+    try { this.editor.packProject(this.state, favorites); } catch (error) { this.setState({ dialogNotice: error.message }); return; }
+    this.setState({ favorites, dialogNotice: '已收藏完整版本（包含目前照片與文案）。' }, () => this.queueDraft());
+  }
+
+  downloadProject = () => {
+    try {
+      const project = this.editor.packProject(this.state, this.state.favorites);
+      this.eng.download('typeset-' + new Date().toISOString().slice(0, 10) + '.typeset.json', new Blob([JSON.stringify(project)], { type: 'application/json' }));
+      this.setState({ exportStatus: '完整草稿備份已準備下載。請保留檔案以便日後開啟。' });
+    } catch (error) { this.setState({ dialogNotice: '草稿備份失敗：' + error.message }); }
+  };
+
+  importProject = async (e) => {
+    const file = e.target.files?.[0]; e.target.value = '';
+    if (!file) return;
+    try {
+      if (file.size > 96 * 1024 * 1024) throw new Error('草稿超過 96 MB，請先在原裝置減少照片或收藏。');
+      const restored = this.editor.unpackProject(JSON.parse(await file.text()), this._defaults, this.data);
+      const favorites = [...this.state.favorites, ...restored.favorites];
+      if (favorites.length > this.editor.LIMITS.favorites) throw new Error('匯入後收藏會超過 12 個，請先備份並減少目前收藏。');
+      this.editor.packProject(restored.document, favorites);
+      this.save(restored.document);
+      this.setState({ favorites, notice: '已開啟草稿；目前作品可透過「復原」找回。', downloadOpen: false }, () => this.queueDraft());
+    } catch (error) { this.setState({ dialogNotice: '無法開啟草稿：' + error.message, exportStatus: '草稿未載入，目前作品保持原樣。' }); }
+  };
 
   rnd(n, not) {
     if (n <= 1) return 0;
@@ -841,9 +1117,9 @@ class Component extends DCLogic {
 
   buildDoc(opts) {
     const o = opts || {};
-    const d = this.data, st = this.state;
+    const d = this.data, st = o.state || this.state;
     const canvas = d.CANVASES[st.canvasIdx % d.CANVASES.length];
-    const variant = o.variant || this.cur().variant;
+    const variant = o.variant || d.CATEGORIES[st.catIdx].variants[st.varIdx];
     const mode = d.MODES[st.modeIdx % d.MODES.length];
     const font = d.FONTS[st.fontIdx % d.FONTS.length];
     const W = canvas.w, H = canvas.h;
@@ -890,23 +1166,31 @@ class Component extends DCLogic {
       cl._clone = ci;
       frames.push(cl);
     });
-    return { w: W, h: H, bg: col('bg'), frames, canvas, variant, grayFilter: st.grayPhoto,
+    const fittedFrames = frames.map((f) => this.eng.fitTextFrame(f));
+    return { w: W, h: H, physicalSize: o.forExport ? canvas.physicalSize : undefined, bg: col('bg'), frames: fittedFrames, canvas, variant, grayFilter: st.grayPhoto,
       grain: o.noGrain ? null : { on: st.grainOn, intensity: st.grainAmt, freq: st.grainSize } };
   }
 
   async doExport(kind) {
-    const eng = this.eng;
-    const { cat, variant } = this.cur();
-    const doc = this.buildDoc({ forExport: true });
-    const svg = eng.buildSVG(doc);
-    const name = 'typeset-' + cat.id + '-' + variant.id + '-' + doc.canvas.id;
-    if (kind === 'svg') {
-      eng.download(name + '.svg', new Blob([svg], { type: 'image/svg+xml' }));
-    } else {
-      const mime = kind === 'png' ? 'image/png' : 'image/jpeg';
-      const blob = await eng.rasterize(svg, doc.w, doc.h, this.state.exportScale, mime);
-      eng.download(name + '@' + this.state.exportScale + 'x' + (kind === 'png' ? '.png' : '.jpg'), blob);
-    }
+    if (this.state.exporting) return;
+    this.setState({ exporting: true, exportStatus: '正在準備下載…' });
+    try {
+      const eng = this.eng;
+      const { cat, variant } = this.cur();
+      const doc = this.buildDoc({ forExport: true });
+      const svg = eng.buildSVG(doc);
+      const name = 'typeset-' + cat.id + '-' + variant.id + '-' + doc.canvas.id;
+      if (kind === 'svg') eng.download(name + '.svg', new Blob([svg], { type: 'image/svg+xml' }));
+      else {
+        const mime = kind === 'png' ? 'image/png' : 'image/jpeg';
+        const blob = await eng.rasterize(svg, doc.w, doc.h, this.state.exportScale, mime);
+        if (!blob) throw new Error('無法產生圖片，請降低解析度後重試。');
+        eng.download(name + '@' + this.state.exportScale + 'x' + (kind === 'png' ? '.png' : '.jpg'), blob);
+      }
+      this.setState({ exportStatus: '作品已準備下載，請查看瀏覽器的下載項目。' });
+    } catch (error) {
+      this.setState({ exportStatus: '下載失敗：' + error.message, notice: '無法完成下載，請降低圖片解析度或重新加入照片後再試。' });
+    } finally { this.setState({ exporting: false }); }
   }
 
   startDrag = (e, slot) => {
@@ -937,7 +1221,7 @@ class Component extends DCLogic {
     // Alt/Option 拖曳 = 複製：建立一個來源元素的副本並改拖曳副本
     let dragIdx = idx;
     let isClone = (typeof idx === 'string' && idx[0] === 'x');
-    if (e.altKey && !isClone) {
+    if (e.altKey && !isClone && this.state.extraElems.length < 100) {
       const cur = (this.state.elemOff && this.state.elemOff[idx]) || { x: 0, y: 0 };
       const extra = (this.state.extraElems || []).slice();
       const ci = extra.length;
@@ -1011,7 +1295,7 @@ class Component extends DCLogic {
       if (!moved && isClone && e.altKey === false) {
         const extra = this.state.extraElems.slice();
         extra.splice(cloneN, 1);
-        this.setState({ extraElems: extra });
+        this.save({ extraElems: extra });
         return;
       }
       if (!moved && !isClone && role) this.setState({ editRole: role });
@@ -1022,21 +1306,33 @@ class Component extends DCLogic {
   };
 
   shuffle = () => {
-    const d = this.data;
-    if (!d || this._shuffling) return;
+    if (!this.data || this._shuffling || this._loadingPhotos || (this.state.locks.layout && this.state.locks.font)) return;
+    const start = this.editor.snapshot(this.state);
+    const signature = (doc) => [doc.catIdx, doc.varIdx, doc.fontIdx].join('/');
+    let previous = start;
+    const frames = Array.from({ length: 7 }, (_, i) => {
+      const candidates = this.generateCandidates(start);
+      const next = candidates.find((c) => signature(c.document) !== signature(previous) && (i !== 6 || signature(c.document) !== signature(start))) || candidates.find((c) => signature(c.document) !== signature(previous)) || candidates[0];
+      previous = next.document;
+      return next.document;
+    });
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { this.save(frames[6]); return; }
     this._shuffling = true;
-    let n = 0; const steps = 7;
+    this._shuffleStart = start;
+    this.setState({ shuffling: true, editRole: null });
+    let frame = 0;
+    const delays = [70, 100, 130, 160, 210, 280];
     const tick = () => {
-      const st = this.state;
-      const catIdx = st.locks.layout ? st.catIdx : Math.floor(Math.random() * d.CATEGORIES.length);
-      const cat = d.CATEGORIES[catIdx % d.CATEGORIES.length];
-      const patch = { varIdx: Math.floor(Math.random() * cat.variants.length), elemOff: {}, extraElems: [], editRole: null };
-      if (!st.locks.layout) patch.catIdx = catIdx;
-      if (!st.locks.font) patch.fontIdx = Math.floor(Math.random() * d.FONTS.length);
-      this.setState(patch);
-      n++;
-      if (n < steps) { this._shufTimer = setTimeout(tick, 55 + n * 26); }
-      else { this._shuffling = false; this.save({}); }
+      if (this._disposed) return;
+      if (frame === frames.length - 1) {
+        this._shuffling = false;
+        this._shuffleStart = null;
+        this.setState({ shuffling: false });
+        this.save(frames[frame]);
+        return;
+      }
+      this.setState(frames[frame]);
+      this._shuffleTimer = setTimeout(tick, delays[frame++]);
     };
     tick();
   };
@@ -1055,53 +1351,51 @@ class Component extends DCLogic {
   };
 
   loadFiles = async (files) => {
-    if (!files.length) return;
-    const loaded = await Promise.all(files.map((file) => new Promise((res) => {
-      const fr = new FileReader();
-      fr.onload = () => {
-        const im = new Image();
-        im.onload = () => {
-          const max = 900;
-          const sc = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
-          let preview = fr.result;
-          if (sc < 1) {
-            const c = document.createElement('canvas');
-            c.width = Math.round(im.naturalWidth * sc);
-            c.height = Math.round(im.naturalHeight * sc);
-            c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-            preview = c.toDataURL('image/jpeg', 0.82);
-          }
-          res({ full: fr.result, preview, nw: im.naturalWidth, nh: im.naturalHeight });
-        };
-        im.onerror = () => res(null);
-        im.src = fr.result;
-      };
-      fr.onerror = () => res(null);
-      fr.readAsDataURL(file);
-    })));
-    const ok = loaded.filter(Boolean);
-    if (ok.length) this.setState((s) => ({ photos: [...s.photos, ...ok] }));
+    if (!files.length || this._loadingPhotos) return;
+    this._loadingPhotos = true;
+    const { LIMITS, uid } = this.editor;
+    const photos = this.state.photos.slice(), rejected = [];
+    let total = photos.reduce((n, p) => n + (p.bytes || Math.ceil(p.full.length * 0.75)), 0);
+    this.setState({ notice: '正在讀取照片…' });
+    try {
+      for (const file of files) {
+        if (photos.length >= LIMITS.photos) { rejected.push('最多 8 張照片'); break; }
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { rejected.push('支援 JPG、PNG、WebP'); continue; }
+        if (file.size > LIMITS.fileBytes) { rejected.push('單張照片需小於 12 MB'); continue; }
+        if (total + file.size > LIMITS.totalBytes) { rejected.push('照片總量需小於 32 MB'); continue; }
+        try {
+          const full = await new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error('讀取失敗')); reader.readAsDataURL(file);
+          });
+          const img = await new Promise((resolve, reject) => {
+            const im = new Image(); im.onload = () => resolve(im); im.onerror = () => reject(new Error('無法解碼')); im.src = full;
+          });
+          if (img.naturalWidth * img.naturalHeight > LIMITS.pixels) { rejected.push('單張照片需小於 4,000 萬像素'); continue; }
+          const scale = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const preview = canvas.toDataURL('image/webp', 0.85);
+          photos.push({ id: uid(), full, preview, nw: img.naturalWidth, nh: img.naturalHeight, bytes: file.size });
+          total += file.size;
+        } catch (error) { rejected.push('有照片無法讀取，請換成 JPG 或 PNG 後重試'); }
+      }
+      if (photos.length > this.state.photos.length) {
+        try { this.editor.packProject({ ...this.state, photos }, this.state.favorites); this.save({ photos }); }
+        catch (error) { this.setState({ notice: error.message }); return; }
+      }
+      this.setState({ notice: rejected.length ? [...new Set(rejected)].join('；') + '。其他有效照片已加入。' : '照片已加入。修改文字後，可以比較 4 個排版版本。' });
+    } finally { this._loadingPhotos = false; }
   };
-
-  lockVals(key, name) {
-    const on = this.state.locks[key];
-    return {
-      ['lock' + name + 'Label']: on ? '已鎖定' : '可隨機',
-      ['lock' + name + 'Border']: on ? '#e9e7e1' : '#3a3a37',
-      ['lock' + name + 'Bg']: on ? '#e9e7e1' : '#1d1d1b',
-      ['lock' + name + 'Fg']: on ? '#141414' : '#8a8880',
-      ['toggleLock' + name]: () => this.save({ locks: { ...this.state.locks, [key]: !on } }),
-    };
-  }
 
   renderVals() {
     const st = this.state;
-    if (!this.data) {
+    if (!st.ready || !this.data) {
       return {
-        isGen: true, isLib: false, statusLabel: '載入中…', svgUri: '', prevW: 300, prevH: 424,
+        startup: true, draftStatus: st.draftStatus, draftStatusEn: 'Loading project…', shuffleLabel: '全部隨機', shuffleLabelEn: 'Shuffle', isGen: true, isLib: false, undoDisabled: true, redoDisabled: true, favoriteCount: 0, statusLabel: '載入中…', svgUri: '', prevW: 300, prevH: 424,
         genTabBg: '#e9e7e1', genTabFg: '#141414', libTabBg: 'transparent', libTabFg: '#8a8880',
         catList: [], canvasList: [], fontList: [], modeList: [], scaleList: [],
-        photoThumbs: [], hasPhotos: false, libGroups: [], tocItems: [], hasToc: false, tocThemeLabel: '', tocLayoutLabel: '', imgZones: [], hasImgZones: false,
+        photoThumbs: [], hasPhotos: false, libraryCategories: [], libraryCards: [], libraryPreviewOpen: false, imgZones: [], hasImgZones: false,
         uploadBorder: '#3f3f3b', uploadBg: '#1a1a18', uploadHint: '＋ 上傳或拖曳照片(可多張)·Upload / Drop',
         photoCountLabel: '0 張', trueVal: true, openFeedback: () => {},
         uploadHintHidden: '＋ 上傳 / 拖曳照片（可多張）',
@@ -1118,7 +1412,8 @@ class Component extends DCLogic {
     const doc = this.buildDoc({});
     const svg = eng.buildSVG(doc);
     const mobile = st.winW < 760;
-    const fit = Math.max(0.1, Math.min((st.winH - 120) / doc.h, (st.winW - 600) / doc.w, 0.85));
+    const pickerWidth = st.pickerOpen && st.winW >= 1200 ? Math.min(340, Math.max(280, st.winW * 0.25)) : 0;
+    const fit = Math.max(0.1, Math.min((st.winH - 226) / doc.h, (st.winW - 572 - pickerWidth) / doc.w, 0.85));
     this._fit = fit;
     const imgZones = doc.frames.filter((f) => f.kind === 'image').map((f) => ({
       key: 'z' + f.slot,
@@ -1129,12 +1424,12 @@ class Component extends DCLogic {
 
     // 轉場：版型/類別/畫布/底色/字體變動時，預覽淡入縮放一次
     const svgUri = eng.svgToDataUri(svg);
-    const sig = st.catIdx + '/' + st.varIdx + '/' + st.canvasIdx + '/' + st.modeIdx + '/' + st.fontIdx;
+    const sig = st.catIdx + '/' + st.varIdx + '/' + st.canvasIdx + '/' + st.modeIdx + '/' + st.fontIdx + '/' + st.shuffling;
     if (sig !== this._sig) { this._sig = sig; this._animTick = (this._animTick || 0) + 1; }
     const previewImg = React.createElement('img', {
-      key: 'pv' + this._animTick,
+      key: 'pv' + this._animTick, alt: '目前排版作品預覽',
       src: svgUri,
-      style: { width: '100%', height: '100%', display: 'block', animation: 'tg-pop 380ms cubic-bezier(.2,.7,.2,1)' },
+      style: { width: '100%', height: '100%', display: 'block', animation: st.shuffling ? 'tg-shuffle 160ms ease-out' : 'tg-pop 380ms cubic-bezier(.2,.7,.2,1)' },
     });
 
     // 拖曳所有文字/形狀元素 + 點文字行內編輯
@@ -1162,8 +1457,8 @@ class Component extends DCLogic {
           b = { x: f.x, y: f.y - f.size, w: (maxX - f.x) + f.size, h: (maxY - f.y) + f.size };
         }
         else {
-          const lh = f.lh || 1.2; const maxLines = Math.max(1, Math.floor(f.h / (f.size * lh)));
-          const lines = eng.wrapLines(f.text, f.size, f.family, f.weight, f.w, maxLines);
+          const lh = f.lh || 1.2; const maxLines = Math.max(1, 1 + Math.floor((f.h - f.size) / (f.size * lh)));
+          const lines = eng.wrapLines(f.text, f.size, f.family, f.weight, f.w, maxLines, f.ls || 0);
           b = { x: f.x, y: f.y, w: f.w, h: Math.max(f.size * 1.3, Math.max(1, lines.length) * f.size * lh) };
         }
         this._zoneRole[idx] = f.role;
@@ -1197,8 +1492,8 @@ class Component extends DCLogic {
       const ef = doc.frames.find((f) => f.kind === 'text' && f.role === st.editRole);
       if (ef) {
         const tx = ef.tx || 0, ty = ef.ty || 0;
-        const lh = ef.lh || 1.2; const maxLines = Math.max(1, Math.floor(ef.h / (ef.size * lh)));
-        const lines = eng.wrapLines(ef.text, ef.size, ef.family, ef.weight, ef.w, maxLines);
+        const lh = ef.lh || 1.2; const maxLines = Math.max(1, 1 + Math.floor((ef.h - ef.size) / (ef.size * lh)));
+        const lines = eng.wrapLines(ef.text, ef.size, ef.family, ef.weight, ef.w, maxLines, ef.ls || 0);
         editor = {
           left: Math.round((ef.x + tx) * fit), top: Math.round((ef.y + ty) * fit),
           width: Math.round(ef.w * fit), height: Math.round(Math.max(ef.size * 1.3, Math.max(1, lines.length) * ef.size * lh) * fit),
@@ -1223,52 +1518,6 @@ class Component extends DCLogic {
       fgc: active ? '#ffffff' : '#a8a69f',
     });
 
-    const tocItems = st.view === 'lib' ? d.CATEGORIES.map((g, gi) => ({
-      key: g.id,
-      num: (g.name.match(/^\d+/) || [String(gi + 1)])[0].padStart(2, '0'),
-      name: g.name.replace(/^\d+\s*/, ''),
-      en: g.en,
-      slogan: (d.GUIDE[g.id] || {}).slogan || '',
-      icon: React.createElement('div', {
-        style: { width: '64%', height: '64%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-        dangerouslySetInnerHTML: { __html: this.TOC_ICONS[g.id] || '' },
-      }),
-      scroll: () => {
-        this.save({ libOpen: { ...st.libOpen, [g.id]: true } });
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          const sc = document.getElementById('lib-scroll');
-          const tg = document.getElementById('lib-cat-' + g.id);
-          if (sc && tg) sc.scrollTop += tg.getBoundingClientRect().top - sc.getBoundingClientRect().top - 18;
-        }));
-      },
-    })) : [];
-
-    const libGroups = st.view === 'lib' ? d.CATEGORIES.map((g, gi) => {
-      const open = !!st.libOpen[g.id];
-      return ({
-      key: g.id, name: g.name, en: g.en, desc: g.desc,
-      open,
-      toggleLabel: open ? '−' : '+',
-      headerBg: open ? '#161614' : '#121210',
-      toggle: () => this.save({ libOpen: { ...st.libOpen, [g.id]: !open } }),
-      openBook: () => this.save({ view: 'book', bookPage: gi * 7, bookDir: 1, bookTocOpen: false }),
-      slogan: (d.GUIDE[g.id] || {}).slogan || '',
-      guideDesc: ((d.GUIDE[g.id] || {}).desc || []).map((t, i) => ({ key: i, text: t })),
-      guideWhen: (d.GUIDE[g.id] || {}).when || '',
-      guideEffects: ((d.GUIDE[g.id] || {}).effects || []).map((t, i) => ({ key: i, text: t })),
-      cards: g.variants.map((v, vi) => {
-        const tdoc = this.buildDoc({ variant: v, noGrain: true });
-        const active = gi === curCatIdx && vi === curVarIdx;
-        const thumb = eng.svgToDataUri(eng.buildSVG(tdoc));
-        return {
-          key: g.id + v.id, name: v.name, theme: this.sc(v.theme),
-          img: React.createElement('img', { src: thumb, style: { width: '100%', display: 'block', background: '#1d1d1b' } }),
-          border: active ? '#e9e7e1' : '#262624',
-          pick: () => this.save({ catIdx: gi, varIdx: vi, view: 'gen' }),
-        };
-      }),
-    }); }) : [];
-
     const catList = d.CATEGORIES.map((g, gi) => {
       const open = gi === curCatIdx;
       return {
@@ -1288,20 +1537,56 @@ class Component extends DCLogic {
       };
     });
 
+    const comparisonItems = st.compareMode === 'favorites' ? st.favorites : st.candidates;
+    const textWarning = doc.frames.some((f) => f.textOverflow) ? '部分文字仍超出文字框，請縮短文案、降低字級或選擇其他版型。' : '';
+    const comparisonCards = st.compareOpen ? comparisonItems.map((item) => {
+      const itemDoc = item.document;
+      const itemCat = d.CATEGORIES[itemDoc.catIdx], itemVariant = itemCat.variants[itemDoc.varIdx];
+      const saved = st.favorites.some((f) => f.id === item.id);
+      const preview = this.buildDoc({ state: itemDoc });
+      return {
+        key: item.id, name: itemCat.name + ' · ' + itemVariant.name,
+        detail: d.FONTS[itemDoc.fontIdx].name + ' · ' + d.CANVASES[itemDoc.canvasIdx].name,
+        img: React.createElement('img', { src: eng.svgToDataUri(eng.buildSVG(preview)), alt: itemVariant.name + ' 排版預覽' }),
+        apply: () => this.applyCandidate(item), applyLabel: '套用 ' + itemVariant.name,
+        saved, favorite: () => this.favoriteCandidate(item), favoriteLabel: saved ? '♥ 已收藏' : '♡ 收藏', favoriteLabelEn: saved ? 'Saved' : 'Save',
+      };
+    }) : [];
     return {
+      startup: false,
+      draftStatusEn: st.draftStatus.includes('正在儲存') ? 'Saving…' : st.draftStatus.includes('已儲存') ? 'Saved on this device' : st.draftStatus.includes('已還原') ? 'Project restored' : /失敗|尚未/.test(st.draftStatus) ? 'Please back up your project' : 'Autosaved on this device',
+      draftStatus: st.draftStatus, dialogNotice: st.dialogNotice, notice: [st.notice, textWarning].filter(Boolean).join(' · '),
+      undo: () => this.travelHistory('undo'), redo: () => this.travelHistory('redo'),
+      undoDisabled: st.shuffling || !this._history.canUndo, redoDisabled: st.shuffling || !this._history.canRedo,
+      favoriteCount: st.favorites.length,
+      noPhotos: !st.photos.length,
+      layoutLocked: st.shuffling || st.locks.layout, allLocked: st.shuffling || (st.locks.layout && st.locks.font),
+      shuffling: st.shuffling, shuffleInert: st.shuffling ? '' : undefined,
+      shuffleLabel: st.shuffling ? '隨機變換中…' : '全部隨機', shuffleLabelEn: st.shuffling ? 'Shuffling…' : 'Shuffle',
+      openCompare: this.refreshCompare, refreshCompare: this.refreshCompare,
+      openFavorites: () => { this.setState({ compareMode: 'favorites' }); this.showDialog('compare'); },
+      openDownload: () => this.showDialog('download'),
+      activateFileLabel: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.querySelector('input')?.click(); } },
+      closeDialog: this.closeDialog, dialogKey: this.dialogKey, dialogRef: this.dialogRef,
+      dismissBackdrop: (e) => { if (e.target === e.currentTarget) this.closeDialog(); },
+      hasDialog: !!(st.compareOpen || st.downloadOpen || st.libraryPreview), inertValue: st.compareOpen || st.downloadOpen || st.libraryPreview ? '' : undefined,
+      compareOpen: st.compareOpen, downloadOpen: st.downloadOpen,
+      compareTitleEn: st.compareMode === 'favorites' ? 'Favorites' : '',
+      compareTitle: st.compareMode === 'favorites' ? '收藏的版本' : '選一個方向，繼續創作',
+      compareDescription: st.compareMode === 'favorites' ? '照片、文字與排版都保留在收藏當下的狀態。' : '四個版本使用相同照片與文案，搭配不同版型與字型。',
+      compareFooter: '套用後可復原；收藏只保存在此瀏覽器。',
+      compareEmpty: !comparisonCards.length, comparisonCards,
+      saveCurrentFavorite: () => this.favoriteCandidate({ id: this.editor.uid(), document: this.editor.snapshot(this.state) }),
+      downloadProject: this.downloadProject, importProject: this.importProject,
+      exportStatus: st.exportStatus, exporting: st.exporting, textWarning,
+      exportDimensions: (doc.canvas.physicalSize ? doc.canvas.physicalSize.width + ' × ' + doc.canvas.physicalSize.height + ' mm' : Math.round(doc.w * st.exportScale) + ' × ' + Math.round(doc.h * st.exportScale) + ' px') + ' · ' + doc.canvas.name,
+      exportPixelDimensions: doc.canvas.physicalSize ? 'PNG / JPG：' + Math.round(doc.w * st.exportScale) + ' × ' + Math.round(doc.h * st.exportScale) + ' px' : '',
       isGen, isLib: st.view === 'lib',
       mobile,
       statusLabel: cat.name + ' · ' + variant.name + ' · ' + this.sc(variant.theme) + ' · ' + doc.canvas.name,
-      goGen: () => this.save({ view: 'gen' }),
-      goLib: () => this.save({ view: 'lib' }),
-      goBook: () => this.save({ view: 'book' }),
-      toggleAllLib: () => {
-        const allOpen = d.CATEGORIES.every((g) => st.libOpen[g.id]);
-        const next = {};
-        if (!allOpen) d.CATEGORIES.forEach((g) => { next[g.id] = true; });
-        this.save({ libOpen: next });
-      },
-      toggleAllLabel: d.CATEGORIES.every((g) => st.libOpen[g.id]) ? '全部收合 Collapse all' : '全部展開 Expand all',
+      goGen: () => this.setState({ view: 'gen', pickerOpen: false }),
+      goLib: this.openLibrary,
+      goBook: () => this.setState({ view: 'book', pickerOpen: false }),
       genTabBg: st.view === 'gen' ? '#e9e7e1' : 'transparent', genTabFg: st.view === 'gen' ? '#141414' : '#8a8880',
       libTabBg: st.view === 'lib' ? '#e9e7e1' : 'transparent', libTabFg: st.view === 'lib' ? '#141414' : '#8a8880',
       bookTabBg: st.view === 'book' ? '#e9e7e1' : 'transparent', bookTabFg: st.view === 'book' ? '#141414' : '#8a8880',
@@ -1316,9 +1601,7 @@ class Component extends DCLogic {
       snapHTop: st.snapLines && st.snapLines.y != null ? Math.round(st.snapLines.y * fit) : 0,
       imgZones, hasImgZones: imgZones.length > 0,
       elemZones, editor, hasEditor: !!editor,
-      libGroups, catList, tocItems, hasToc: tocItems.length > 0,
-      tocThemeLabel: d.CATEGORIES.length + ' 個排版主題 · 點任一卡跳到下方並展開',
-      tocLayoutLabel: d.CATEGORIES.length + ' × 5 = ' + (d.CATEGORIES.length * 5) + ' 個版型',
+      catList, ...this.libraryVals(),
 
       randVariant: () => !st.locks.layout && this.save({ varIdx: this.rnd(cat.variants.length, curVarIdx) }),
       randLayout: () => !st.locks.layout && this.save({
@@ -1327,8 +1610,6 @@ class Component extends DCLogic {
       }),
       randAll: () => this.shuffle(),
 
-      ...this.lockVals('layout', 'Layout'),
-      ...this.lockVals('font', 'Font'),
 
       onUpload: this.onUpload,
       trueVal: true,
@@ -1343,10 +1624,10 @@ class Component extends DCLogic {
       uploadBorder: st.dragOver ? '#e9e7e1' : '#3f3f3b',
       uploadBg: st.dragOver ? '#26261f' : '#1a1a18',
       uploadHint: st.dragOver ? '鬆開以加入 · Drop here' : '＋ 上傳 / 拖曳照片（可多張）',
-      clearPhotos: () => this.setState({ photos: [] }),
+      clearPhotos: () => this.save({ photos: [], photoOff: {} }),
       hasPhotos: st.photos.length > 0,
       photoCountLabel: st.photos.length + ' 張',
-      photoThumbs: st.photos.map((p, i) => ({ key: 'p' + i, img: React.createElement('img', { src: p.preview, style: { width: 46, height: 46, borderRadius: 5, objectFit: 'cover', border: '1px solid #3a3a37', display: 'block' } }), remove: () => this.setState((s) => ({ photos: s.photos.filter((_, j) => j !== i) })) })),
+      photoThumbs: st.photos.map((p, i) => ({ key: 'p' + i, img: React.createElement('img', { src: p.preview, style: { width: 46, height: 46, borderRadius: 5, objectFit: 'cover', border: '1px solid #3a3a37', display: 'block' } }), remove: () => this.save({ photos: this.state.photos.filter((_, j) => j !== i), photoOff: {} }) })),
       photoZoom: st.photoZoom,
       photoZoomLabel: Math.round(st.photoZoom * 100) + '%',
       setPhotoZoom: (e) => this.save({ photoZoom: parseFloat(e.target.value) }),
@@ -1399,7 +1680,7 @@ class Component extends DCLogic {
       setSubScale: (e) => this.save({ subScale: parseFloat(e.target.value) }),
 
       scaleList: [1, 2, 3].map((n) => ({
-        key: 's' + n, name: n + 'x', ...btn(st.exportScale === n),
+        key: 's' + n, name: n + 'x', active: st.exportScale === n, ...btn(st.exportScale === n),
         pick: () => this.save({ exportScale: n }),
       })),
       scaleName: st.exportScale + 'x',
