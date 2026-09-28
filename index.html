@@ -465,7 +465,7 @@ class Component extends DCLogic {
     bookTocOpen: false,
     bookTocStyle: 'list',
     canvasIdx: 0,
-    catIdx: 2,
+    catIdx: 0,
     varIdx: 0,
     modeIdx: 0,
     fontIdx: 0,
@@ -536,8 +536,12 @@ class Component extends DCLogic {
       }
       const restoredDoc = recovered?.document || this._defaults;
       // Removed lock controls must not leave restored projects locked.
-      const doc = { ...restoredDoc, locks: { ...restoredDoc.locks, layout: false, font: false } };
-      this._history = new editor.History(doc);
+      const previousDoc = { ...restoredDoc, locks: { ...restoredDoc.locks, layout: false, font: false } };
+      const doc = this.libraryDocument(0, 0, previousDoc);
+      // Start at 01 A on each visit, with the saved composition available via Undo.
+      // Opening the page alone must not overwrite the stored draft.
+      this._history = new editor.History(previousDoc);
+      if (this._history.record(doc) && recovered) status = '已還原內容，從版型 01 開始';
       this.setState({ ...doc, ...this.readBookProgress(), favorites: recovered?.favorites || [], ready: true, draftStatus: status, notice });
       this.onResize = () => this.setState({ winW: window.innerWidth, winH: window.innerHeight });
       window.addEventListener('resize', this.onResize); this.onResize();
